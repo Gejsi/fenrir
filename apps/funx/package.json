@@ -1,0 +1,16 @@
+{
+  "name": "funx",
+  "scripts": {
+    "serve": "clear && serverless offline",
+    "hello": "clear && serverless invoke local -f hello"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "aws-sdk": "^2.1257.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.14.54",
+    "serverless-esbuild": "^1.34.0",
+    "serverless-offline": "^11.6.0"
+  }
+}
