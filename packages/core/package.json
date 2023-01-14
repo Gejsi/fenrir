@@ -1,7 +1,7 @@
 {
   "name": "core",
   "scripts": {
-    "build": "tsup ./index.ts --format cjs --dts",
+    "build": "tsup ./index.ts",
     "dev": "tsx watch ./index.ts"
   },
   "dependencies": {
@@ -9,6 +9,18 @@
   },
   "devDependencies": {
     "tsup": "^6.5.0",
-    "tsx": "^3.12.2"
+    "tsx": "^3.12.2",
+    "tsconfig": "workspace:*"
+  },
+  "tsup": {
+    "format": [
+      "cjs",
+      "esm"
+    ],
+    "dts": {
+      "resolve": true
+    },
+    "sourcemap": true,
+    "clean": true
   }
 }
