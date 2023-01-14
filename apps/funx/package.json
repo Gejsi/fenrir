@@ -1,8 +1,8 @@
 {
   "name": "funx",
   "scripts": {
-    "serve": "clear && serverless offline",
-    "hello": "clear && serverless invoke local -f hello"
+    "serve": "serverless offline",
+    "hello": "serverless invoke local -f hello"
   },
   "license": "MIT",
   "dependencies": {

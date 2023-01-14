@@ -3,6 +3,7 @@ node_modules
 .pnp
 .pnp.js
 .esbuild
+dist
 
 # testing
 coverage

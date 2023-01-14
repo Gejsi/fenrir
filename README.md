@@ -4,7 +4,23 @@ This project is a monorepo still under development.
 
 ---
 
-### Apps -> Funx
+### Packages - core
+
+Contains the main source code.
+
+Run typescript code:
+
+```console
+$ turbo run dev
+```
+
+Bundle into a `dist` folder:
+
+```console
+$ turbo run build
+```
+
+### Apps - funx
 
 Contains example cloud functions.
 To run them from the root of the project, firstly start the offline server:
