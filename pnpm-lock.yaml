@@ -29,13 +29,17 @@ importers:
 
   packages/core:
     specifiers:
+      '@phenomnomnominal/tstemplate': ^0.1.0
+      '@types/node': ^18.11.18
       tsconfig: workspace:*
       tsup: ^6.5.0
       tsx: ^3.12.2
       typescript: ^4.7.4
     dependencies:
+      '@phenomnomnominal/tstemplate': 0.1.0
       typescript: 4.9.4
     devDependencies:
+      '@types/node': 18.11.18
       tsconfig: link:../tsconfig
       tsup: 6.5.0_typescript@4.9.4
       tsx: 3.12.2
@@ -1163,6 +1167,10 @@ packages:
     dependencies:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.14.0
+
+  /@phenomnomnominal/tstemplate/0.1.0:
+    resolution: {integrity: sha512-/v+GIVNFHAz4+nQtgy9e5ZAXK3xj6TbP5s9JTpnFuqkcLB+gB2lJ6x/nsDhkKhzR6o4REuzhsYoWYnXqKC/UnQ==}
+    dev: false
 
   /@serverless/dashboard-plugin/6.2.2_supports-color@8.1.1:
     resolution: {integrity: sha512-h3zOprpuWZCdAP7qoOKT2nboB+AaxMkGoSzOD0jIBpt9s0cXqLE2VFjR2vKn8Cvam47Qa3XYnT2/XN6tR6rZgQ==}

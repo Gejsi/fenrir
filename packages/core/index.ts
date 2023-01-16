@@ -1,14 +1,5 @@
-import * as ts from 'typescript'
+import { extractAnnotations } from './compiler'
 
-const transformer: ts.TransformerFactory<ts.SourceFile> = (context) => {
-  return (sourceFile) => {
-    const visitor = (node: ts.Node): ts.Node => {
-      console.log(node.kind, `\t# ts.SyntaxKind.${ts.SyntaxKind[node.kind]}`)
-      return ts.visitEachChild(node, visitor, context)
-    }
+const annotations = extractAnnotations(['input/test.ts'])
 
-    return ts.visitNode(sourceFile, visitor)
-  }
-}
-
-export default transformer
+console.log(JSON.stringify(annotations, undefined, 2))
