@@ -2,7 +2,7 @@
  * #Fixed
  * Lorem ipsum
  * dolor sit amet
- * @returns 2
+ * @borrows 2
  */
 export function merge(left: number[], right: number[]) {
   return [...left, ...right]

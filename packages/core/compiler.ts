@@ -4,6 +4,7 @@ type Annotation = Partial<{
   name: string
   annotation: string
   fileName: string
+  kind: ts.SyntaxKind
   variables: Annotation[]
   parameters: Annotation[]
 }>
@@ -17,6 +18,8 @@ export function extractAnnotations(
   fileNames: string[] | string,
   options: ts.CompilerOptions = { allowJs: true }
 ): Annotation[] {
+  console.log('Extracting annotations')
+
   const files = Array.isArray(fileNames)
     ? fileNames
     : ts.sys.readDirectory(fileNames)
@@ -32,10 +35,18 @@ export function extractAnnotations(
 
     if (ts.isFunctionLike(node)) {
       // This is a top level function, get its symbol
-      let symbol = node.name && checker.getSymbolAtLocation(node.name)
+      const symbol = node.name && checker.getSymbolAtLocation(node.name)
 
       if (symbol) output.push(serializeFunction(symbol, node))
-    } else if (ts.isModuleDeclaration(node)) {
+    } else if (ts.isVariableDeclaration(node)) {
+      const symbol = checker.getSymbolAtLocation(node.name)
+
+      if (symbol) output.push(serializeSymbol(symbol, node))
+    } else if (
+      ts.isModuleDeclaration(node) ||
+      ts.isVariableStatement(node) ||
+      ts.isVariableDeclarationList(node)
+    ) {
       // This is a namespace, visit its children
       ts.forEachChild(node, visit)
     }
@@ -49,6 +60,7 @@ export function extractAnnotations(
         symbol.getDocumentationComment(checker)
       ),
       fileName: node.getSourceFile().fileName,
+      kind: node.kind,
     }
   }
 
