@@ -4,27 +4,26 @@ type Annotation = Partial<{
   name: string
   annotation: string
   fileName: string
-  constructors: Annotation[]
+  variables: Annotation[]
   parameters: Annotation[]
 }>
 
 const isNodeExported = (node: ts.Node): boolean => {
-  return (
-    (ts.getCombinedModifierFlags(node as ts.Declaration) &
-      ts.ModifierFlags.Export) !==
-      0 ||
-    (!!node.parent && node.parent.kind === ts.SyntaxKind.SourceFile)
-  )
+  return ts.getCombinedModifierFlags(node as ts.Declaration) !== 0
 }
 
-/** Generate documentation for all annotated nodes */
+// Generate documentation for all annotated nodes
 export function extractAnnotations(
-  fileNames: string[],
+  fileNames: string[] | string,
   options: ts.CompilerOptions = { allowJs: true }
 ): Annotation[] {
-  let program = ts.createProgram(fileNames, options)
-  let checker = program.getTypeChecker()
-  let output: Annotation[] = []
+  const files = Array.isArray(fileNames)
+    ? fileNames
+    : ts.sys.readDirectory(fileNames)
+
+  const program = ts.createProgram(files, options)
+  const checker = program.getTypeChecker()
+  const output: Annotation[] = []
 
   // Visit nodes finding exported annotated nodes
   const visit = (node: ts.Node) => {
@@ -35,8 +34,7 @@ export function extractAnnotations(
       // This is a top level function, get its symbol
       let symbol = node.name && checker.getSymbolAtLocation(node.name)
 
-      if (symbol) output.push(serializeFunction(symbol))
-      // No need to walk any further, class expressions/inner declarations cannot be exported
+      if (symbol) output.push(serializeFunction(symbol, node))
     } else if (ts.isModuleDeclaration(node)) {
       // This is a namespace, visit its children
       ts.forEachChild(node, visit)
@@ -44,34 +42,36 @@ export function extractAnnotations(
   }
 
   // Serialize a symbol
-  const serializeSymbol = (symbol: ts.Symbol): Annotation => {
+  const serializeSymbol = (symbol: ts.Symbol, node: ts.Node): Annotation => {
     return {
       name: symbol.getName(),
       annotation: ts.displayPartsToString(
         symbol.getDocumentationComment(checker)
       ),
-      fileName: fileNames[0],
+      fileName: node.getSourceFile().fileName,
     }
   }
 
   // Serialize a signature
-  const serializeSignature = (signature: ts.Signature) => {
+  const serializeSignature = (signature: ts.Signature, node: ts.Node) => {
     return {
-      parameters: signature.parameters.map(serializeSymbol),
+      parameters: signature.parameters.map((symbol) =>
+        serializeSymbol(symbol, node)
+      ),
     }
   }
 
   // Serialize nodes symbol information
-  const serializeFunction = (symbol: ts.Symbol) => {
-    let details = serializeSymbol(symbol)
+  const serializeFunction = (symbol: ts.Symbol, node: ts.Node): Annotation => {
+    let details = serializeSymbol(symbol, node)
 
-    let signatureType =
+    let symbolType =
       symbol.valueDeclaration &&
       checker.getTypeOfSymbolAtLocation(symbol, symbol.valueDeclaration)
 
-    details.constructors = signatureType
+    details.variables = symbolType
       ?.getCallSignatures()
-      .map(serializeSignature)
+      .map((signature) => serializeSignature(signature, node))
 
     return details
   }
