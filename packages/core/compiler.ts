@@ -5,12 +5,14 @@ type Annotation = Partial<{
   annotation: string
   fileName: string
   kind: ts.SyntaxKind
-  variables: Annotation[]
+  innerAnnotations: Annotation[]
   parameters: Annotation[]
 }>
 
 const isNodeExported = (node: ts.Node): boolean => {
-  return ts.getCombinedModifierFlags(node as ts.Declaration) !== 0
+  const modifierFlags = ts.getCombinedModifierFlags(node as ts.Declaration)
+
+  return (modifierFlags & ts.ModifierFlags.Export) !== 0
 }
 
 // Generate documentation for all annotated nodes
@@ -28,26 +30,32 @@ export function extractAnnotations(
   const checker = program.getTypeChecker()
   const output: Annotation[] = []
 
-  // Visit nodes finding exported annotated nodes
+  // Visit nodes to find exported annotated nodes
   const visit = (node: ts.Node) => {
     // Only consider exported nodes
     if (!isNodeExported(node)) return
 
     if (ts.isFunctionLike(node)) {
-      // This is a top level function, get its symbol
+      // top level function
       const symbol = node.name && checker.getSymbolAtLocation(node.name)
 
       if (symbol) output.push(serializeFunction(symbol, node))
     } else if (ts.isVariableDeclaration(node)) {
+      // top level variable
       const symbol = checker.getSymbolAtLocation(node.name)
 
-      if (symbol) output.push(serializeSymbol(symbol, node))
+      if (symbol) {
+        // detect if this variable is an anonymous function
+        if (ts.isFunctionLike(node.initializer))
+          output.push(serializeFunction(symbol, node))
+        else output.push(serializeSymbol(symbol, node))
+      }
     } else if (
+      // iterate through namespaces, variables
       ts.isModuleDeclaration(node) ||
       ts.isVariableStatement(node) ||
       ts.isVariableDeclarationList(node)
     ) {
-      // This is a namespace, visit its children
       ts.forEachChild(node, visit)
     }
   }
@@ -81,7 +89,7 @@ export function extractAnnotations(
       symbol.valueDeclaration &&
       checker.getTypeOfSymbolAtLocation(symbol, symbol.valueDeclaration)
 
-    details.variables = symbolType
+    details.innerAnnotations = symbolType
       ?.getCallSignatures()
       .map((signature) => serializeSignature(signature, node))
 

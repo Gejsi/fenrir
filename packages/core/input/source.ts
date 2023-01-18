@@ -16,3 +16,14 @@ export const bar = () => {
   const man = 1
   return man
 }
+
+/**
+ * #Fixed
+ * dolor sit amet
+ * Lorem ipsum
+ * @returns 1
+ */
+export const lok = function () {
+  const man = 1
+  return man
+}
