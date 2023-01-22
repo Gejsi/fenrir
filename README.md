@@ -1,4 +1,4 @@
-<h1 align='center'>Bloom</h1>
+<h1 align='center'>Fenrir</h1>
 
 This project is a monorepo still under development.
 
