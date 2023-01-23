@@ -2,7 +2,7 @@
   "name": "core",
   "scripts": {
     "build": "tsup ./index.ts",
-    "dev": "tsx watch index.ts"
+    "dev": "tsx watch regex.ts"
   },
   "dependencies": {
     "@phenomnomnominal/tstemplate": "^0.1.0",

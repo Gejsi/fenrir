@@ -4,16 +4,26 @@
  * dolor sit amet
  * @borrows 2
  */
-export function merge(left: number[], right: number[]) {
-  return [...left, ...right]
-}
+export const a = 1
 
 /**
- * #Fixed
+ * #Fixed(firstParam, secondParam)
  * dolor sit amet
  * Lorem ipsum
  * @returns 1
  */
-export function sort(arr: number[]) {
-  return arr
-}
+export const b = 2
+
+// #\w+\(\w+\)
+// #\w+\(\w*(,\w*)*\)
+// #\w+(\(\w*(,)*\s*\w*\))?
+// #\w+(\((\w+(,)*\s*(\w)+)*\))?
+// #\w+(\((\s*\w+(,)*\s*\w+\s*)*\))?
+
+/**
+ * #Fixed(
+ * dolor sit amet
+ * Lorem ipsum
+ * @returns 1
+ */
+export const c = 3

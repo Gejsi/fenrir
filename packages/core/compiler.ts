@@ -1,12 +1,11 @@
 import ts from 'typescript'
 
-type Annotation = Partial<{
+type AnnotationData = Partial<{
   name: string
   annotation: string
   fileName: string
-  kind: ts.SyntaxKind
-  innerAnnotations: Annotation[]
-  parameters: Annotation[]
+  innerAnnotations: AnnotationData[]
+  parameters: AnnotationData[]
 }>
 
 const isNodeExported = (node: ts.Node): boolean => {
@@ -19,7 +18,7 @@ const isNodeExported = (node: ts.Node): boolean => {
 export function extractAnnotations(
   fileNames: string[] | string,
   options: ts.CompilerOptions = { allowJs: true }
-): Annotation[] {
+): AnnotationData[] {
   console.log('Extracting annotations')
 
   const files = Array.isArray(fileNames)
@@ -28,7 +27,7 @@ export function extractAnnotations(
 
   const program = ts.createProgram(files, options)
   const checker = program.getTypeChecker()
-  const output: Annotation[] = []
+  const output: AnnotationData[] = []
 
   // Visit nodes to find exported annotated nodes
   const visit = (node: ts.Node) => {
@@ -61,14 +60,18 @@ export function extractAnnotations(
   }
 
   // Serialize a symbol
-  const serializeSymbol = (symbol: ts.Symbol, node: ts.Node): Annotation => {
+  const serializeSymbol = (
+    symbol: ts.Symbol,
+    node: ts.Node
+  ): AnnotationData => {
+    console.log(symbol.getDocumentationComment(checker)[0].text)
+
     return {
       name: symbol.getName(),
       annotation: ts.displayPartsToString(
         symbol.getDocumentationComment(checker)
       ),
       fileName: node.getSourceFile().fileName,
-      kind: node.kind,
     }
   }
 
@@ -82,7 +85,10 @@ export function extractAnnotations(
   }
 
   // Serialize nodes symbol information
-  const serializeFunction = (symbol: ts.Symbol, node: ts.Node): Annotation => {
+  const serializeFunction = (
+    symbol: ts.Symbol,
+    node: ts.Node
+  ): AnnotationData => {
     let details = serializeSymbol(symbol, node)
 
     let symbolType =
