@@ -1,5 +1,7 @@
 // #(\w+)\s*(\((\s*\w+,*\s*\w+\s*)+\))
 
+import { start } from 'repl'
+
 export const noteRegex = /#(?<name>\w+)\s*(?<args>\((\s*\w+,*\s*\w+\s*)+\))?/d
 
 // Try the regex at: https://regexr.com/
@@ -29,7 +31,7 @@ export const noteRegex = /#(?<name>\w+)\s*(?<args>\((\s*\w+,*\s*\w+\s*)+\))?/d
 
 // #Note)
 
-const str = '#Note(, )'
+const str = '#wired(firstParam)'
 
 type Annotation = {
   name: string
@@ -43,38 +45,72 @@ type Match =
     })
   | null
 
+const reportSyntaxError = (
+  text: string,
+  emptyCount: number,
+  markerCount: number,
+  errorMessage: string
+) => {
+  let errorText = text + '\n'
+  errorText += ' '.repeat(emptyCount) + '^'.repeat(markerCount) + '\n'
+  errorText += ' '.repeat(emptyCount) + errorMessage + '\n'
+
+  console.log(errorText)
+}
+
+// TODO: add annotation name line position in the program for syntax errors
 export const parseAnnotation = (text: string): Annotation | undefined => {
   const match = text.match(noteRegex) as Match
 
   if (!match || !match.groups) return
 
-  // TODO: add diagnostics for names
-  // TODO: add annotation name line position in the program
-  if ((!match.groups.args && text.includes('(')) || text.includes(')')) {
-    console.log()
+  const { name, args } = match.groups
 
-    const endPos = match.indices.groups.name[1]
+  // catch name syntax errors
+  if (name !== 'Fixed') {
+    const [startPos, endPos] = match.indices.groups.name
 
-    let errorText = text + '\n'
-    errorText += ' '.repeat(endPos) + '^'.repeat(text.length - endPos) + '\n'
-    errorText += ' '.repeat(endPos) + 'Invalid number of parameters' + '\n'
-
-    console.log(errorText)
-
-    console.log(
-      `You have provided parameters with a wrong syntax for '#${match.groups.name}' at...\n`
+    reportSyntaxError(
+      text,
+      startPos,
+      endPos - startPos,
+      'Unknown annotation name'
     )
+
+    process.exit(1)
   }
 
-  const args = match.groups.args
-    ?.substring(1, match.groups.args.length - 1)
+  // handles plain `#Note` case
+  const isSimple = !text.includes('(') && !text.includes(')')
+
+  // catch args syntax errors
+  if (!args && !isSimple) {
+    const endPos = match.indices.groups.name[1]
+
+    reportSyntaxError(
+      text,
+      endPos,
+      text.length - endPos,
+      'Invalid number of parameters'
+    )
+
+    console.log(
+      `You have provided parameters with a wrong syntax for '#${name}' at...\n`
+    )
+
+    process.exit(1)
+  }
+
+  const parsedArgs = args
+    ?.substring(1, args.length - 1)
     .split(',')
     .map((s) => s.trim())
 
   return {
-    name: match.groups.name!,
-    args,
+    name: name!,
+    args: parsedArgs,
   }
 }
 
+console.log()
 console.log(parseAnnotation(str))
