@@ -12,7 +12,7 @@ export const a = 1
  * Lorem ipsum
  * @returns 1
  */
-export const b = 2
+export const b = () => {}
 
 // #\w+\(\w+\)
 // #\w+\(\w*(,\w*)*\)
@@ -20,8 +20,7 @@ export const b = 2
 // #\w+(\((\w+(,)*\s*(\w)+)*\))?
 // #\w+(\((\s*\w+(,)*\s*\w+\s*)*\))?
 
-/**
- * #Fixed(
+/** #HttpGet
  * dolor sit amet
  * Lorem ipsum
  * @returns 1

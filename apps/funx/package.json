@@ -1,7 +1,7 @@
 {
   "name": "funx",
   "scripts": {
-    "serve": "serverless offline",
+    "serve": "serverless offline start",
     "hello": "serverless invoke local -f hello"
   },
   "license": "MIT",

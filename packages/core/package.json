@@ -1,8 +1,8 @@
 {
   "name": "core",
   "scripts": {
-    "build": "tsup ./index.ts",
-    "dev": "tsx watch regex.ts"
+    "build": "tsup src/index.ts",
+    "dev": "tsx watch src/index.ts"
   },
   "dependencies": {
     "@phenomnomnominal/tstemplate": "^0.1.0",

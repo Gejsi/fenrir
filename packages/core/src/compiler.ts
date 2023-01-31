@@ -1,11 +1,12 @@
 import ts from 'typescript'
+import { AnnotationData, parseAnnotation } from './regex'
 
-type AnnotationData = Partial<{
+type Data = Partial<{
   name: string
-  annotation: string
+  annotation: AnnotationData
   fileName: string
-  innerAnnotations: AnnotationData[]
-  parameters: AnnotationData[]
+  innerAnnotations: Data[]
+  parameters: Data[]
 }>
 
 const isNodeExported = (node: ts.Node): boolean => {
@@ -18,7 +19,7 @@ const isNodeExported = (node: ts.Node): boolean => {
 export function extractAnnotations(
   fileNames: string[] | string,
   options: ts.CompilerOptions = { allowJs: true }
-): AnnotationData[] {
+): Data[] {
   console.log('Extracting annotations')
 
   const files = Array.isArray(fileNames)
@@ -27,7 +28,7 @@ export function extractAnnotations(
 
   const program = ts.createProgram(files, options)
   const checker = program.getTypeChecker()
-  const output: AnnotationData[] = []
+  const output: Data[] = []
 
   // Visit nodes to find exported annotated nodes
   const visit = (node: ts.Node) => {
@@ -60,17 +61,16 @@ export function extractAnnotations(
   }
 
   // Serialize a symbol
-  const serializeSymbol = (
-    symbol: ts.Symbol,
-    node: ts.Node
-  ): AnnotationData => {
-    console.log(symbol.getDocumentationComment(checker)[0].text)
+  const serializeSymbol = (symbol: ts.Symbol, node: ts.Node): Data => {
+    const doc = ts
+      .displayPartsToString(symbol.getDocumentationComment(checker))
+      .split('\n')[0]
+
+    if (!doc) return
 
     return {
       name: symbol.getName(),
-      annotation: ts.displayPartsToString(
-        symbol.getDocumentationComment(checker)
-      ),
+      annotation: parseAnnotation(doc),
       fileName: node.getSourceFile().fileName,
     }
   }
@@ -85,10 +85,7 @@ export function extractAnnotations(
   }
 
   // Serialize nodes symbol information
-  const serializeFunction = (
-    symbol: ts.Symbol,
-    node: ts.Node
-  ): AnnotationData => {
+  const serializeFunction = (symbol: ts.Symbol, node: ts.Node): Data => {
     let details = serializeSymbol(symbol, node)
 
     let symbolType =

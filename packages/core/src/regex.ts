@@ -1,6 +1,4 @@
-// #(\w+)\s*(\((\s*\w+,*\s*\w+\s*)+\))
-
-import { start } from 'repl'
+import { ANNOTATIONS, AnnotationName } from './annotations'
 
 export const noteRegex = /#(?<name>\w+)\s*(?<args>\((\s*\w+,*\s*\w+\s*)+\))?/d
 
@@ -31,10 +29,8 @@ export const noteRegex = /#(?<name>\w+)\s*(?<args>\((\s*\w+,*\s*\w+\s*)+\))?/d
 
 // #Note)
 
-const str = '#wired(firstParam)'
-
-type Annotation = {
-  name: string
+export type AnnotationData = {
+  name: AnnotationName
   args?: string[]
 }
 
@@ -59,7 +55,7 @@ const reportSyntaxError = (
 }
 
 // TODO: add annotation name line position in the program for syntax errors
-export const parseAnnotation = (text: string): Annotation | undefined => {
+export const parseAnnotation = (text: string): AnnotationData | undefined => {
   const match = text.match(noteRegex) as Match
 
   if (!match || !match.groups) return
@@ -67,7 +63,7 @@ export const parseAnnotation = (text: string): Annotation | undefined => {
   const { name, args } = match.groups
 
   // catch name syntax errors
-  if (name !== 'Fixed') {
+  if (!name || !(name in ANNOTATIONS)) {
     const [startPos, endPos] = match.indices.groups.name
 
     reportSyntaxError(
@@ -107,10 +103,7 @@ export const parseAnnotation = (text: string): Annotation | undefined => {
     .map((s) => s.trim())
 
   return {
-    name: name!,
+    name: name as AnnotationName,
     args: parsedArgs,
   }
 }
-
-console.log()
-console.log(parseAnnotation(str))

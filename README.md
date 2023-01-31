@@ -11,13 +11,13 @@ Contains the main source code.
 Run typescript code:
 
 ```console
-$ turbo run dev
+$ turbo run dev --filter core
 ```
 
 Bundle into a `dist` folder:
 
 ```console
-$ turbo run build
+$ turbo run build --filter core
 ```
 
 ### Apps - funx
