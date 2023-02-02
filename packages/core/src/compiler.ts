@@ -30,8 +30,15 @@ export function extractAnnotations(
 
     // `isFunctionLike()` doesn't detect anonymous functions
     // so variables must be visited as well
-    if (ts.isFunctionLike(node) || ts.isVariableDeclaration(node)) {
-      const symbol = node.name && checker.getSymbolAtLocation(node.name)
+    if (ts.isFunctionLike(node) || ts.isVariableStatement(node)) {
+      const currentNode =
+        node.kind === ts.SyntaxKind.VariableStatement
+          ? node.declarationList.declarations[0]
+          : node
+      if (!currentNode) return
+
+      const symbol =
+        currentNode.name && checker.getSymbolAtLocation(currentNode.name)
       if (!symbol) return
 
       const doc = ts
@@ -42,21 +49,17 @@ export function extractAnnotations(
       const parsedAnnotation = scanAnnotation(doc)
       if (!parsedAnnotation) return
 
-      // detect if this node is normal function
-      const isFunction = node.kind === ts.SyntaxKind.FunctionDeclaration
+      // detect if this node is a normal function
+      const isFunction = currentNode.kind === ts.SyntaxKind.FunctionDeclaration
       // detect if this node is an anonymous function
       const isAnonFunction =
-        node.kind === ts.SyntaxKind.VariableDeclaration &&
-        ts.isFunctionLike(node.initializer)
+        currentNode.kind === ts.SyntaxKind.VariableDeclaration &&
+        ts.isFunctionLike(currentNode.initializer)
 
       if (isFunction || isAnonFunction)
         output.push(serializeFunction(symbol, node, parsedAnnotation))
-    } else if (
-      // iterate through namespaces and variables
-      ts.isModuleDeclaration(node) ||
-      ts.isVariableStatement(node) ||
-      ts.isVariableDeclarationList(node)
-    ) {
+    } else if (ts.isModuleDeclaration(node)) {
+      // iterate through namespaces
       ts.forEachChild(node, visit)
     }
   }

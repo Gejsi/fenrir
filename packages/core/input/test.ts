@@ -13,7 +13,7 @@ export const a = 1
 export const b = () => {}
 
 /**
- * #HttpPos
+ * #HttpPost
  * Dude
  */
 export function bar() {}
