@@ -1,13 +1,12 @@
 import ts from 'typescript'
-import { isNodeDocumented, isNodeExported } from './node'
-import { AnnotationData, parseAnnotation } from './regex'
+import { isNodeExported } from './node'
+import { AnnotationData, scanAnnotation } from './scanner'
 
 type Data = Partial<{
   name: string
   annotation: AnnotationData
   fileName: string
-  innerAnnotations: Data[]
-  parameters: Data[]
+  kind: 'Function' | 'CallExpression'
 }>
 
 // Generate documentation for all annotated nodes
@@ -29,23 +28,31 @@ export function extractAnnotations(
     // Only consider exported nodes
     if (!isNodeExported(node)) return
 
-    if (ts.isFunctionLike(node) && isNodeDocumented(node)) {
-      // top level function
+    // `isFunctionLike()` doesn't detect anonymous functions
+    // so variables must be visited as well
+    if (ts.isFunctionLike(node) || ts.isVariableDeclaration(node)) {
       const symbol = node.name && checker.getSymbolAtLocation(node.name)
+      if (!symbol) return
 
-      if (symbol) output.push(serializeFunction(symbol, node))
-    } else if (ts.isVariableDeclaration(node) && isNodeDocumented(node)) {
-      // top level variable
-      const symbol = checker.getSymbolAtLocation(node.name)
+      const doc = ts
+        .displayPartsToString(symbol.getDocumentationComment(checker))
+        .split('\n')[0]
+      if (!doc) return
 
-      if (symbol) {
-        // detect if this variable is an anonymous function
-        if (ts.isFunctionLike(node.initializer))
-          output.push(serializeFunction(symbol, node))
-        else output.push(serializeSymbol(symbol, node))
-      }
+      const parsedAnnotation = scanAnnotation(doc)
+      if (!parsedAnnotation) return
+
+      // detect if this node is normal function
+      const isFunction = node.kind === ts.SyntaxKind.FunctionDeclaration
+      // detect if this node is an anonymous function
+      const isAnonFunction =
+        node.kind === ts.SyntaxKind.VariableDeclaration &&
+        ts.isFunctionLike(node.initializer)
+
+      if (isFunction || isAnonFunction)
+        output.push(serializeFunction(symbol, node, parsedAnnotation))
     } else if (
-      // iterate through namespaces, variables
+      // iterate through namespaces and variables
       ts.isModuleDeclaration(node) ||
       ts.isVariableStatement(node) ||
       ts.isVariableDeclarationList(node)
@@ -54,48 +61,30 @@ export function extractAnnotations(
     }
   }
 
-  // Serialize a symbol
-  const serializeSymbol = (symbol: ts.Symbol, node: ts.Node): Data => {
-    const doc = ts
-      .displayPartsToString(symbol.getDocumentationComment(checker))
-      .split('\n')[0]
-
-    if (!doc) return
-
-    const parsedAnnotation = parseAnnotation(doc)
-
-    if (!parsedAnnotation) return
-
+  const serializeSymbol = (
+    symbol: ts.Symbol,
+    node: ts.Node,
+    annotation: AnnotationData
+  ): Data => {
     return {
       name: symbol.getName(),
-      annotation: parsedAnnotation,
+      annotation,
       fileName: node.getSourceFile().fileName,
     }
   }
 
-  // Serialize a signature
-  const serializeSignature = (signature: ts.Signature, node: ts.Node) => {
-    return {
-      parameters: signature.parameters.map((symbol) =>
-        serializeSymbol(symbol, node)
-      ),
-    }
-  }
-
-  // Serialize nodes symbol information
-  const serializeFunction = (symbol: ts.Symbol, node: ts.Node): Data => {
-    let details = serializeSymbol(symbol, node)
-
-    let symbolType =
-      symbol.valueDeclaration &&
-      checker.getTypeOfSymbolAtLocation(symbol, symbol.valueDeclaration)
-
-    details.innerAnnotations = symbolType
-      ?.getCallSignatures()
-      .map((signature) => serializeSignature(signature, node))
-
+  // Serialize function-like nodes
+  const serializeFunction = (
+    symbol: ts.Symbol,
+    node: ts.Node,
+    annotation: AnnotationData
+  ): Data => {
+    let details = serializeSymbol(symbol, node, annotation)
+    details.kind = 'Function'
     return details
   }
+
+  // TODO: serialize call expressions
 
   program
     .getSourceFiles()

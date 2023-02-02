@@ -2,15 +2,24 @@
  * #Fixed
  * Lorem ipsum
  * dolor sit amet
- * @borrows 2
+ * @returns 1
  */
 export const a = 1
 
+/**
+ * #HttpGet
+ * Dude
+ */
 export const b = () => {}
 
+/**
+ * #HttpPos
+ * Dude
+ */
 export function bar() {}
 
 /**
+ * #Fixed
  * dolor sit amet
  * Lorem ipsum
  * @returns 1

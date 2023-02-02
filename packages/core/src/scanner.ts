@@ -55,7 +55,7 @@ const reportSyntaxError = (
 }
 
 // TODO: add annotation name line position in the program for syntax errors
-export const parseAnnotation = (text: string): AnnotationData | undefined => {
+export const scanAnnotation = (text: string): AnnotationData | undefined => {
   const match = text.match(noteRegex) as Match
 
   if (!match || !match.groups) return
@@ -71,6 +71,10 @@ export const parseAnnotation = (text: string): AnnotationData | undefined => {
       startPos,
       endPos - startPos,
       'Unknown annotation name'
+    )
+
+    console.log(
+      `You have provided an unknown annotation name for '#${name}' at...\n`
     )
 
     process.exit(1)
