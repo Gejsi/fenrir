@@ -46,7 +46,11 @@ export function extractAnnotations(
         .split('\n')[0]
       if (!doc) return
 
-      const parsedAnnotation = scanAnnotation(doc)
+      const parsedAnnotation = scanAnnotation(
+        doc,
+        symbol.getName(),
+        currentNode
+      )
       if (!parsedAnnotation) return
 
       // detect if this node is a normal function
@@ -57,7 +61,7 @@ export function extractAnnotations(
         ts.isFunctionLike(currentNode.initializer)
 
       if (isFunction || isAnonFunction)
-        output.push(serializeFunction(symbol, node, parsedAnnotation))
+        output.push(serializeFunction(symbol, currentNode, parsedAnnotation))
     } else if (ts.isModuleDeclaration(node)) {
       // iterate through namespaces
       ts.forEachChild(node, visit)

@@ -1,10 +1,11 @@
+import type { Node } from 'typescript'
 import { ANNOTATIONS, AnnotationName } from './annotations'
 
 export const noteRegex = /#(?<name>\w+)\s*(?<args>\((\s*\w+,*\s*\w+\s*)+\))?/d
 
 // Try the regex at: https://regexr.com/
 
-// #Note(     firstParam, dude)
+// #Note(     firstParam, secondParam)
 // dolor sit amet Lorem ipsum
 
 // #Note(firstParam, secondParam, thirdParam)
@@ -45,17 +46,33 @@ const reportSyntaxError = (
   text: string,
   emptyCount: number,
   markerCount: number,
-  errorMessage: string
+  errorMessage: string,
+  nodeName: string,
+  node: Node
 ) => {
   let errorText = text + '\n'
   errorText += ' '.repeat(emptyCount) + '^'.repeat(markerCount) + '\n'
-  errorText += ' '.repeat(emptyCount) + errorMessage + '\n'
+  errorText += ' '.repeat(emptyCount) + errorMessage + '\n\n'
+
+  const filePath = node.getSourceFile().fileName
+  const { line } = node
+    .getSourceFile()
+    .getLineAndCharacterOfPosition(node.getStart())
+
+  errorText += `You have provided an ${errorMessage.toLowerCase()} for '${nodeName}' defined here\n ${filePath}:${
+    line + 1
+  }\n`
 
   console.log(errorText)
+  process.exit(1)
 }
 
 // TODO: add annotation name line position in the program for syntax errors
-export const scanAnnotation = (text: string): AnnotationData | undefined => {
+export const scanAnnotation = (
+  text: string,
+  nodeName: string,
+  node: Node
+): AnnotationData | undefined => {
   const match = text.match(noteRegex) as Match
 
   if (!match || !match.groups) return
@@ -70,14 +87,10 @@ export const scanAnnotation = (text: string): AnnotationData | undefined => {
       text,
       startPos,
       endPos - startPos,
-      'Unknown annotation name'
+      'Unknown annotation name',
+      nodeName,
+      node
     )
-
-    console.log(
-      `You have provided an unknown annotation name for '#${name}' at...\n`
-    )
-
-    process.exit(1)
   }
 
   // handles plain `#Note` case
@@ -91,14 +104,10 @@ export const scanAnnotation = (text: string): AnnotationData | undefined => {
       text,
       endPos,
       text.length - endPos,
-      'Invalid number of parameters'
+      'Invalid number of parameters',
+      nodeName,
+      node
     )
-
-    console.log(
-      `You have provided parameters with a wrong syntax for '#${name}' at...\n`
-    )
-
-    process.exit(1)
   }
 
   const parsedArgs = args

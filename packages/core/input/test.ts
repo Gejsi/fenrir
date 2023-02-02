@@ -8,13 +8,13 @@ export const a = 1
 
 /**
  * #HttpGet
- * Dude
+ * Jok
  */
 export const b = () => {}
 
 /**
- * #HttpPost
- * Dude
+ * #HttpPost()
+ * Foo
  */
 export function bar() {}
 
