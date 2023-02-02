@@ -1,4 +1,5 @@
 import ts from 'typescript'
+import { isNodeDocumented, isNodeExported } from './node'
 import { AnnotationData, parseAnnotation } from './regex'
 
 type Data = Partial<{
@@ -8,12 +9,6 @@ type Data = Partial<{
   innerAnnotations: Data[]
   parameters: Data[]
 }>
-
-const isNodeExported = (node: ts.Node): boolean => {
-  const modifierFlags = ts.getCombinedModifierFlags(node as ts.Declaration)
-
-  return (modifierFlags & ts.ModifierFlags.Export) !== 0
-}
 
 // Generate documentation for all annotated nodes
 export function extractAnnotations(
@@ -30,17 +25,16 @@ export function extractAnnotations(
   const checker = program.getTypeChecker()
   const output: Data[] = []
 
-  // Visit nodes to find exported annotated nodes
   const visit = (node: ts.Node) => {
     // Only consider exported nodes
     if (!isNodeExported(node)) return
 
-    if (ts.isFunctionLike(node)) {
+    if (ts.isFunctionLike(node) && isNodeDocumented(node)) {
       // top level function
       const symbol = node.name && checker.getSymbolAtLocation(node.name)
 
       if (symbol) output.push(serializeFunction(symbol, node))
-    } else if (ts.isVariableDeclaration(node)) {
+    } else if (ts.isVariableDeclaration(node) && isNodeDocumented(node)) {
       // top level variable
       const symbol = checker.getSymbolAtLocation(node.name)
 
@@ -68,9 +62,13 @@ export function extractAnnotations(
 
     if (!doc) return
 
+    const parsedAnnotation = parseAnnotation(doc)
+
+    if (!parsedAnnotation) return
+
     return {
       name: symbol.getName(),
-      annotation: parseAnnotation(doc),
+      annotation: parsedAnnotation,
       fileName: node.getSourceFile().fileName,
     }
   }
