@@ -55,13 +55,23 @@ export function extractAnnotations(
 
       // detect if this node is a normal function
       const isFunction = currentNode.kind === ts.SyntaxKind.FunctionDeclaration
-      // detect if this node is an anonymous function
+      // detect if this variable is an anonymous function
       const isAnonFunction =
         currentNode.kind === ts.SyntaxKind.VariableDeclaration &&
         ts.isFunctionLike(currentNode.initializer)
+      // detect if this variable is a call expression
+      const isCall =
+        currentNode.kind === ts.SyntaxKind.VariableDeclaration &&
+        currentNode.initializer &&
+        ts.isCallExpression(currentNode.initializer)
 
       if (isFunction || isAnonFunction)
         output.push(serializeFunction(symbol, currentNode, parsedAnnotation))
+      else if (isCall) {
+        output.push(
+          serializeCallExpression(symbol, currentNode, parsedAnnotation)
+        )
+      }
     } else if (ts.isModuleDeclaration(node)) {
       // iterate through namespaces
       ts.forEachChild(node, visit)
@@ -91,7 +101,16 @@ export function extractAnnotations(
     return details
   }
 
-  // TODO: serialize call expressions
+  // Serialize call-like nodes
+  const serializeCallExpression = (
+    symbol: ts.Symbol,
+    node: ts.Node,
+    annotation: AnnotationData
+  ): Data => {
+    let details = serializeSymbol(symbol, node, annotation)
+    details.kind = 'CallExpression'
+    return details
+  }
 
   program
     .getSourceFiles()
