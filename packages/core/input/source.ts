@@ -1,15 +1,11 @@
-/** #Autowired */
-export async function count() {}
-
-/** #Persistent */
-export let foo = 1
+server.listen()
 
 /**
  * #Fixed
  */
-export const bar = () => {}
+export async function kol() {}
 
 /**
  * #Fixed
  */
-export const lok = function () {}
+export async function bar() {}
