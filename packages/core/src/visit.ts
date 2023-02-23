@@ -4,23 +4,33 @@ export const visitFunction = (
   node: ts.FunctionDeclaration | ts.VariableDeclaration
 ) => {
   if (ts.isFunctionDeclaration(node)) {
-    // TODO: this is just an example transfomer to update functions
-    return ts.createVariableDeclarationList(
-      [
-        ts.createVariableDeclaration(
-          ts.createIdentifier(node.name.escapedText),
-          undefined,
-          ts.createArrowFunction(
-            undefined,
-            undefined,
-            [],
-            undefined,
-            ts.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
-            ts.createBlock([], false)
-          )
-        ),
-      ],
-      ts.NodeFlags.Const
+    // const symbolType = checker.getTypeOfSymbolAtLocation(
+    //   symbol,
+    //   symbol.valueDeclaration!
+    // )
+
+    // const parameters = symbolType.getCallSignatures().at(0)?.parameters
+    // const returnType = symbolType.getCallSignatures().at(0)?.getReturnType()
+
+    const parameters = [
+      ts.factory.createParameterDeclaration(undefined, undefined, 'event'),
+      ts.factory.createParameterDeclaration(undefined, undefined, 'context'),
+      ts.factory.createParameterDeclaration(undefined, undefined, 'callback'),
+    ]
+
+    const block = ts.forEachChild(node, (currentNode) => {
+      if (ts.isBlock(currentNode)) return currentNode
+    })
+
+    return ts.factory.updateFunctionDeclaration(
+      node,
+      ts.getModifiers(node), // modifiers
+      undefined, // asteriskToken
+      node.name, // name
+      ts.getEffectiveTypeParameterDeclarations(node), // typeParameters
+      parameters, // parameters
+      undefined, // returnType
+      block // block
     )
   }
 }
