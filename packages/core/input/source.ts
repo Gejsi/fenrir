@@ -1,6 +1,6 @@
 import { log } from 'console'
 
-type First = 'First'
+type First = number
 type Second = 'Second'
 
 /**
@@ -16,4 +16,6 @@ export async function kol(first: First) {
  */
 export async function bar(second: Second) {
   const lambda = new Lambda()
+
+  const a = 2
 }

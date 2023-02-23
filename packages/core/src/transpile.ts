@@ -44,7 +44,8 @@ export function transpile(fileNames: string[] | string) {
               node.initializer &&
               ts.isCallExpression(node.initializer)
 
-            if (isFunction || isAnonFunction) return visitFunction(node)
+            if (isFunction || isAnonFunction)
+              return visitFunction(checker, node)
             else if (isCall) visitCallExpression(node)
           }
         }
