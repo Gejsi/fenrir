@@ -9,7 +9,7 @@ type Second = {
 /**
  * #Fixed
  */
-export async function kol(): number | string {
+export async function kol(first: First, half: any): number | string {
   const lambda = new Lambda()
   log('Hello')
 }
@@ -17,7 +17,7 @@ export async function kol(): number | string {
 /**
  * #Fixed
  */
-export async function bar(second: Second) {
+export async function bar(nice) {
   const lambda = new Lambda()
 
   const a = 2

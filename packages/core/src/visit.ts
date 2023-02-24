@@ -1,5 +1,5 @@
 import ts from 'typescript'
-import { buildEventStatement } from './node'
+import { buildEventStatementList } from './node'
 
 export const visitFunction = (
   checker: ts.TypeChecker,
@@ -8,15 +8,15 @@ export const visitFunction = (
 ) => {
   if (ts.isFunctionDeclaration(node)) {
     const oldValues: {
-      parameters?: ts.ParameterDeclaration
+      parameters: ts.ParameterDeclaration[]
       block?: ts.Block
     } = {
-      parameters: undefined,
+      parameters: [],
       block: undefined,
     }
 
     ts.forEachChild(node, (currentNode) => {
-      if (ts.isParameter(currentNode)) oldValues.parameters = currentNode
+      if (ts.isParameter(currentNode)) oldValues.parameters.push(currentNode)
       else if (ts.isBlock(currentNode)) oldValues.block = currentNode
     })
 
@@ -30,20 +30,21 @@ export const visitFunction = (
 
     // if there are parameters to the function,
     // they should be mapped to the `event` cloud function parameter
-    if (oldValues.parameters?.getChildCount() && oldValues.block?.statements) {
-      const eventStatement = buildEventStatement(checker, oldValues.parameters)
+    if (oldValues.parameters.length && oldValues.block?.statements) {
+      const eventStatementList = buildEventStatementList(
+        checker,
+        oldValues.parameters
+      )
 
       newBlock = ts.factory.createBlock(
-        [eventStatement, ...oldValues.block.statements],
+        [...eventStatementList, ...oldValues.block.statements],
         true
       )
     }
 
-    const signatures =
-      symbol.valueDeclaration &&
-      checker
-        .getTypeOfSymbolAtLocation(symbol, symbol.valueDeclaration)
-        .getCallSignatures()
+    const signatures = checker
+      .getTypeOfSymbolAtLocation(symbol, node)
+      .getCallSignatures()
 
     let returnType: ts.TypeNode | undefined = undefined
 
@@ -60,7 +61,7 @@ export const visitFunction = (
       ts.getModifiers(node), // modifiers
       undefined, // asteriskToken
       node.name, // name
-      ts.getEffectiveTypeParameterDeclarations(node), // typeParameters
+      undefined, // typeParameters
       newParameters, // parameters
       returnType, // returnType
       newBlock // block

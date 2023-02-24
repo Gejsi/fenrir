@@ -8,6 +8,8 @@ type Second = {
  * #Fixed
  */
 export async function kol(event, context, callback): string | number {
+    const first: First = event.first;
+    const half: any = event.half;
     const lambda = new Lambda();
     log('Hello');
 }
@@ -15,7 +17,7 @@ export async function kol(event, context, callback): string | number {
  * #Fixed
  */
 export async function bar(event, context, callback): Promise<void> {
-    const second: Second = event.second;
+    const nice: any = event.nice;
     const lambda = new Lambda();
     const a = 2;
 }
