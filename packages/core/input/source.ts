@@ -7,7 +7,7 @@ type Second = {
 }
 
 /**
- * #Fixed
+ * #Fixe
  */
 export async function kol(first: First, half: any): number | string {
   const lambda = new Lambda()

@@ -1,16 +1,13 @@
-import type { Node } from 'typescript'
+import { type Node, sys } from 'typescript'
 import { ANNOTATIONS, AnnotationName } from './annotations'
 
 export const noteRegex = /#(?<name>\w+)\s*(?<args>\((\s*\w+,*\s*\w+\s*)+\))?/d
 
 // Try the regex at: https://regexr.com/
-
 // #Note(     firstParam, secondParam)
 // dolor sit amet Lorem ipsum
-
 // #Note(firstParam, secondParam, thirdParam)
 // dolor sit amet Lorem ipsum
-
 // #Note(firstParam,secondParam)
 // #Note(firstParam,secondParam)(thirdParam)
 // #Note(firstParam,)
@@ -18,17 +15,13 @@ export const noteRegex = /#(?<name>\w+)\s*(?<args>\((\s*\w+,*\s*\w+\s*)+\))?/d
 // #Note(firstParam)
 // #Note()
 // #Note
-
+// #Note(
+// #Note(,)
+// #Note)
 // #Note
 // Lorem ipsum
 // dolor sit amet
 // @borrows 2
-
-// #Note(
-
-// #Note(,)
-
-// #Note)
 
 export type AnnotationData = {
   name: AnnotationName
@@ -54,7 +47,7 @@ const reportSyntaxError = (
   errorText += ' '.repeat(emptyCount) + '^'.repeat(markerCount) + '\n'
   errorText += ' '.repeat(emptyCount) + errorMessage + '\n\n'
 
-  const filePath = node.getSourceFile().fileName
+  const filePath = sys.resolvePath(node.getSourceFile().fileName)
   const { line } = node
     .getSourceFile()
     .getLineAndCharacterOfPosition(node.getStart())
@@ -67,7 +60,6 @@ const reportSyntaxError = (
   process.exit(1)
 }
 
-// TODO: add annotation name line position in the program for syntax errors
 export const scanAnnotation = (
   text: string,
   nodeName: string,
