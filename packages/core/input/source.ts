@@ -1,12 +1,15 @@
 import { log } from 'console'
 
-type First = number
-type Second = 'Second'
+type First = 'f' | 's'
+type Second = {
+  first: 1
+  second: 2
+}
 
 /**
  * #Fixed
  */
-export async function kol(first: First) {
+export async function kol(): number | string {
   const lambda = new Lambda()
   log('Hello')
 }

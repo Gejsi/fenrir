@@ -1,7 +1,9 @@
 import ts from 'typescript'
+import { buildEventStatement } from './node'
 
 export const visitFunction = (
   checker: ts.TypeChecker,
+  symbol: ts.Symbol,
   node: ts.FunctionDeclaration | ts.VariableDeclaration
 ) => {
   if (ts.isFunctionDeclaration(node)) {
@@ -29,34 +31,27 @@ export const visitFunction = (
     // if there are parameters to the function,
     // they should be mapped to the `event` cloud function parameter
     if (oldValues.parameters?.getChildCount() && oldValues.block?.statements) {
-      // TODO: extract this factory into an external function
-      const parameterType = checker.typeToTypeNode(
-        checker.getTypeAtLocation(oldValues.parameters),
-        undefined,
-        undefined
-      )
-
-      const eventStatement = ts.factory.createVariableStatement(
-        undefined,
-        ts.factory.createVariableDeclarationList(
-          [
-            ts.factory.createVariableDeclaration(
-              ts.factory.createIdentifier(oldValues.parameters.name.getText()), // name
-              undefined, // exclamation token
-              parameterType, // type
-              ts.factory.createPropertyAccessExpression(
-                ts.factory.createIdentifier('event'), // expression
-                ts.factory.createIdentifier(oldValues.parameters.name.getText()) // memberName
-              ) // initializer
-            ),
-          ],
-          ts.NodeFlags.Const
-        )
-      )
+      const eventStatement = buildEventStatement(checker, oldValues.parameters)
 
       newBlock = ts.factory.createBlock(
         [eventStatement, ...oldValues.block.statements],
         true
+      )
+    }
+
+    const signatures =
+      symbol.valueDeclaration &&
+      checker
+        .getTypeOfSymbolAtLocation(symbol, symbol.valueDeclaration)
+        .getCallSignatures()
+
+    let returnType: ts.TypeNode | undefined = undefined
+
+    if (signatures?.[0]) {
+      returnType = checker.typeToTypeNode(
+        signatures[0].getReturnType(),
+        undefined,
+        undefined
       )
     }
 
@@ -67,7 +62,7 @@ export const visitFunction = (
       node.name, // name
       ts.getEffectiveTypeParameterDeclarations(node), // typeParameters
       newParameters, // parameters
-      undefined, // returnType
+      returnType, // returnType
       newBlock // block
     )
   }
