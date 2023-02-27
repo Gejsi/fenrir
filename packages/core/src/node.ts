@@ -36,3 +36,20 @@ export const buildEventStatementList = (
     )
   })
 }
+
+export const buildReturnExpression = (node: ts.ReturnStatement) => {
+  const statusCode = ts.factory.createPropertyAssignment(
+    'statusCode',
+    ts.factory.createNumericLiteral(200)
+  )
+
+  const body =
+    node.expression &&
+    ts.factory.createPropertyAssignment('body', node.expression)
+
+  const properties: ts.ObjectLiteralElementLike[] = []
+  properties.push(statusCode)
+  body && properties.push(body)
+
+  return ts.factory.createObjectLiteralExpression(properties, true)
+}

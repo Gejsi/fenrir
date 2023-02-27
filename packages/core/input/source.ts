@@ -7,11 +7,13 @@ type Second = {
 }
 
 /**
- * #Fixe
+ * #Fixed
  */
 export async function kol(first: First, half: any): number | string {
   const lambda = new Lambda()
   log('Hello')
+
+  return null
 }
 
 /**
@@ -21,4 +23,6 @@ export async function bar(nice) {
   const lambda = new Lambda()
 
   const a = 2
+
+  return a
 }

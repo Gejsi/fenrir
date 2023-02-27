@@ -1,10 +1,11 @@
 import ts from 'typescript'
-import { buildEventStatementList } from './node'
+import { buildEventStatementList, buildReturnExpression } from './node'
 
 export const visitFunction = (
   checker: ts.TypeChecker,
   symbol: ts.Symbol,
-  node: ts.FunctionDeclaration | ts.VariableDeclaration
+  node: ts.FunctionDeclaration | ts.VariableDeclaration,
+  context: ts.TransformationContext
 ) => {
   if (ts.isFunctionDeclaration(node)) {
     const oldValues: {
@@ -15,9 +16,29 @@ export const visitFunction = (
       block: undefined,
     }
 
-    ts.forEachChild(node, (currentNode) => {
-      if (ts.isParameter(currentNode)) oldValues.parameters.push(currentNode)
-      else if (ts.isBlock(currentNode)) oldValues.block = currentNode
+    /* Loop through functions to get
+     * 1. Parameters
+     * 2. Function body...
+     *  2.1 TODO: ...to modify throw statements
+     *  2.2 ...to modify return statements
+     */
+    ts.forEachChild(node, (outerNode) => {
+      if (ts.isParameter(outerNode)) oldValues.parameters.push(outerNode)
+      else if (ts.isBlock(outerNode)) {
+        oldValues.block = ts.visitEachChild(
+          outerNode,
+          (innerNode) => {
+            if (ts.isReturnStatement(innerNode))
+              return ts.factory.updateReturnStatement(
+                innerNode,
+                buildReturnExpression(innerNode)
+              )
+
+            return innerNode
+          },
+          context
+        )
+      }
     })
 
     const newParameters = [
