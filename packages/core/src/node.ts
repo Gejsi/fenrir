@@ -37,6 +37,17 @@ export const buildEventStatementList = (
   })
 }
 
+const buildJsonExpression = (expression: ts.Expression): ts.Expression => {
+  return ts.factory.createCallExpression(
+    ts.factory.createPropertyAccessExpression(
+      ts.factory.createIdentifier('JSON'),
+      ts.factory.createIdentifier('stringify')
+    ),
+    undefined,
+    [expression]
+  )
+}
+
 export const buildReturnExpression = (node: ts.ReturnStatement) => {
   const statusCode = ts.factory.createPropertyAssignment(
     'statusCode',
@@ -45,7 +56,10 @@ export const buildReturnExpression = (node: ts.ReturnStatement) => {
 
   const body =
     node.expression &&
-    ts.factory.createPropertyAssignment('body', node.expression)
+    ts.factory.createPropertyAssignment(
+      'body',
+      buildJsonExpression(node.expression)
+    )
 
   const properties: ts.ObjectLiteralElementLike[] = []
   properties.push(statusCode)

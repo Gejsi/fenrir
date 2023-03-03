@@ -1,7 +1,7 @@
-/** #Autowired */
+/** #Fixed */
 export async function count() {}
 
-/** #Persistent */
+/** #HttpGet */
 export let foo = 1
 
 /**

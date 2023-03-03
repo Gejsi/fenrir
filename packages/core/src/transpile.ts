@@ -11,7 +11,7 @@ export function transpile(fileNames: string[] | string) {
 
   const program = ts.createProgram(files, { allowJs: true })
   const checker = program.getTypeChecker()
-  const printer = ts.createPrinter()
+  const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed })
 
   const transformer: ts.TransformerFactory<ts.SourceFile> = (context) => {
     return (sourceFile) => {
@@ -53,15 +53,22 @@ export function transpile(fileNames: string[] | string) {
         return ts.visitEachChild(node, visitor, context)
       }
 
-      const transformedSourceFile = ts.visitNode(sourceFile, visitor)
-      const sourceCode = printer.printFile(transformedSourceFile)
-      emitFile(transformedSourceFile, sourceCode)
-
-      return transformedSourceFile
+      return ts.visitNode(sourceFile, visitor)
     }
   }
 
   program.getSourceFiles().forEach((sourceFile) => {
-    if (!sourceFile.isDeclarationFile) ts.transform(sourceFile, [transformer])
+    if (!sourceFile.isDeclarationFile) {
+      const { transformed: transformedSourceFileList } = ts.transform(
+        sourceFile,
+        [transformer]
+      )
+      const transformedSourceFile = transformedSourceFileList[0]
+
+      if (transformedSourceFile) {
+        const sourceCode = printer.printFile(transformedSourceFile)
+        emitFile(transformedSourceFile, sourceCode)
+      }
+    }
   })
 }

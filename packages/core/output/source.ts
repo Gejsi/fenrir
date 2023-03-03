@@ -14,7 +14,7 @@ export async function kol(event, context, callback): string | number {
     log('Hello');
     return {
         statusCode: 200,
-        body: null
+        body: JSON.stringify(null)
     };
 }
 /**
@@ -26,6 +26,6 @@ export async function bar(event, context, callback): Promise<number> {
     const a = 2;
     return {
         statusCode: 200,
-        body: a
+        body: JSON.stringify(a)
     };
 }

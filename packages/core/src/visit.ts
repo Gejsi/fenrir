@@ -1,6 +1,13 @@
 import ts from 'typescript'
 import { buildEventStatementList, buildReturnExpression } from './node'
 
+const visitFunctionBody: ts.Visitor = (node) => {
+  if (ts.isReturnStatement(node))
+    return ts.factory.updateReturnStatement(node, buildReturnExpression(node))
+
+  return node
+}
+
 export const visitFunction = (
   checker: ts.TypeChecker,
   symbol: ts.Symbol,
@@ -19,23 +26,15 @@ export const visitFunction = (
     /* Loop through functions to get
      * 1. Parameters
      * 2. Function body...
-     *  2.1 TODO: ...to modify throw statements
-     *  2.2 ...to modify return statements
+     *  2.1 TODO: ...and to modify throw statements
+     *  2.2 ...and to modify return statements
      */
     ts.forEachChild(node, (outerNode) => {
       if (ts.isParameter(outerNode)) oldValues.parameters.push(outerNode)
       else if (ts.isBlock(outerNode)) {
         oldValues.block = ts.visitEachChild(
           outerNode,
-          (innerNode) => {
-            if (ts.isReturnStatement(innerNode))
-              return ts.factory.updateReturnStatement(
-                innerNode,
-                buildReturnExpression(innerNode)
-              )
-
-            return innerNode
-          },
+          visitFunctionBody,
           context
         )
       }
@@ -48,7 +47,6 @@ export const visitFunction = (
     ]
 
     let newBlock = oldValues.block
-
     // if there are parameters to the function,
     // they should be mapped to the `event` cloud function parameter
     if (oldValues.parameters.length && oldValues.block?.statements) {
@@ -67,8 +65,7 @@ export const visitFunction = (
       .getTypeOfSymbolAtLocation(symbol, node)
       .getCallSignatures()
 
-    let returnType: ts.TypeNode | undefined = undefined
-
+    let returnType: ts.TypeNode | undefined
     if (signatures?.[0]) {
       returnType = checker.typeToTypeNode(
         signatures[0].getReturnType(),
