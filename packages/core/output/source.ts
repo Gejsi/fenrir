@@ -7,21 +7,21 @@ type Second = {
 /**
  * #Fixed
  */
-export async function kol(event, context, callback): string | number {
+export async function kol(event, context, callback): number | string {
     const first: First = event.first;
-    const half: any = event.half;
+    const half: Record<string, number> = event.half;
     const lambda = new Lambda();
     log('Hello');
     return {
         statusCode: 200,
-        body: JSON.stringify(null)
+        body: JSON.stringify([1, 2])
     };
 }
 /**
  * #Fixed
  */
-export async function bar(event, context, callback): Promise<number> {
-    const nice: any = event.nice;
+export function bar(event, context, callback): number {
+    const par = event.par;
     const lambda = new Lambda();
     const a = 2;
     return {

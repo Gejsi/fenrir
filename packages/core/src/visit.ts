@@ -9,80 +9,81 @@ const visitFunctionBody: ts.Visitor = (node) => {
 }
 
 export const visitFunction = (
-  checker: ts.TypeChecker,
-  symbol: ts.Symbol,
   node: ts.FunctionDeclaration | ts.VariableDeclaration,
   context: ts.TransformationContext
 ) => {
+  const oldValues: {
+    parameters: ts.ParameterDeclaration[]
+    block?: ts.Block
+  } = {
+    parameters: [],
+    block: undefined,
+  }
+
+  /* Loop through functions to get
+   * 1. Parameters
+   * 2. Function body -> modify return statements
+   */
+  ts.forEachChild(node, (outerNode) => {
+    if (ts.isParameter(outerNode)) oldValues.parameters.push(outerNode)
+    else if (ts.isBlock(outerNode)) {
+      oldValues.block = ts.visitEachChild(outerNode, visitFunctionBody, context)
+    }
+  })
+
+  const newParameters = [
+    ts.factory.createParameterDeclaration(undefined, undefined, 'event'),
+    ts.factory.createParameterDeclaration(undefined, undefined, 'context'),
+    ts.factory.createParameterDeclaration(undefined, undefined, 'callback'),
+  ]
+
+  let newBlock = oldValues.block
+  // if there are parameters to the function,
+  // they should be mapped to the `event` cloud function parameter
+  if (oldValues.parameters.length && oldValues.block?.statements) {
+    const eventStatementList = buildEventStatementList(oldValues.parameters)
+
+    newBlock = ts.factory.createBlock(
+      [...eventStatementList, ...oldValues.block.statements],
+      true
+    )
+  }
+
+  console.log(
+    ts
+      .createPrinter()
+      .printNode(ts.EmitHint.Unspecified, newBlock!, node.getSourceFile())
+  )
+
   if (ts.isFunctionDeclaration(node)) {
-    const oldValues: {
-      parameters: ts.ParameterDeclaration[]
-      block?: ts.Block
-    } = {
-      parameters: [],
-      block: undefined,
-    }
-
-    /* Loop through functions to get
-     * 1. Parameters
-     * 2. Function body...
-     *  2.1 TODO: ...and to modify throw statements
-     *  2.2 ...and to modify return statements
-     */
-    ts.forEachChild(node, (outerNode) => {
-      if (ts.isParameter(outerNode)) oldValues.parameters.push(outerNode)
-      else if (ts.isBlock(outerNode)) {
-        oldValues.block = ts.visitEachChild(
-          outerNode,
-          visitFunctionBody,
-          context
-        )
-      }
-    })
-
-    const newParameters = [
-      ts.factory.createParameterDeclaration(undefined, undefined, 'event'),
-      ts.factory.createParameterDeclaration(undefined, undefined, 'context'),
-      ts.factory.createParameterDeclaration(undefined, undefined, 'callback'),
-    ]
-
-    let newBlock = oldValues.block
-    // if there are parameters to the function,
-    // they should be mapped to the `event` cloud function parameter
-    if (oldValues.parameters.length && oldValues.block?.statements) {
-      const eventStatementList = buildEventStatementList(
-        checker,
-        oldValues.parameters
-      )
-
-      newBlock = ts.factory.createBlock(
-        [...eventStatementList, ...oldValues.block.statements],
-        true
-      )
-    }
-
-    const signatures = checker
-      .getTypeOfSymbolAtLocation(symbol, node)
-      .getCallSignatures()
-
-    let returnType: ts.TypeNode | undefined
-    if (signatures?.[0]) {
-      returnType = checker.typeToTypeNode(
-        signatures[0].getReturnType(),
-        undefined,
-        undefined
-      )
-    }
-
     return ts.factory.updateFunctionDeclaration(
-      node,
+      node, // node
       ts.getModifiers(node), // modifiers
-      undefined, // asteriskToken
+      node.asteriskToken, // asteriskToken
       node.name, // name
-      undefined, // typeParameters
+      node.typeParameters, // typeParameters
       newParameters, // parameters
-      returnType, // returnType
+      node.type, // returnType
       newBlock // block
+    )
+  } else {
+    const arrowFunctionNode = node.initializer as ts.ArrowFunction
+
+    // TODO: finish adding updated body
+    return ts.factory.updateVariableDeclaration(
+      node, // node,
+      node.name, // name,
+      node.exclamationToken, // exclamationToken,
+      node.type, // type
+      ts.factory.updateArrowFunction(
+        arrowFunctionNode, // node
+        ts.getModifiers(arrowFunctionNode), // modifiers
+        arrowFunctionNode.typeParameters, // typeParameters
+        newParameters, //parameters
+        arrowFunctionNode.type, // returnType
+        arrowFunctionNode.equalsGreaterThanToken, // equalsGreaterThanToken
+        ts.factory.createBlock([], true) // conciseBody
+      )
     )
   }
 }
