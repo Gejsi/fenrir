@@ -8,6 +8,7 @@ const visitFunctionBody: ts.Visitor = (node) => {
   return node
 }
 
+// TODO: json parse events
 export const visitFunction = (
   node: ts.FunctionDeclaration | ts.VariableDeclaration,
   context: ts.TransformationContext
@@ -26,9 +27,14 @@ export const visitFunction = (
    */
   ts.forEachChild(node, (outerNode) => {
     if (ts.isParameter(outerNode)) oldValues.parameters.push(outerNode)
-    else if (ts.isBlock(outerNode)) {
+    else if (ts.isBlock(outerNode))
       oldValues.block = ts.visitEachChild(outerNode, visitFunctionBody, context)
-    }
+    else if (ts.isArrowFunction(outerNode))
+      oldValues.block = ts.visitEachChild(
+        outerNode.body,
+        visitFunctionBody,
+        context
+      ) as ts.Block
   })
 
   const newParameters = [
@@ -49,12 +55,6 @@ export const visitFunction = (
     )
   }
 
-  console.log(
-    ts
-      .createPrinter()
-      .printNode(ts.EmitHint.Unspecified, newBlock!, node.getSourceFile())
-  )
-
   if (ts.isFunctionDeclaration(node)) {
     return ts.factory.updateFunctionDeclaration(
       node, // node
@@ -69,7 +69,6 @@ export const visitFunction = (
   } else {
     const arrowFunctionNode = node.initializer as ts.ArrowFunction
 
-    // TODO: finish adding updated body
     return ts.factory.updateVariableDeclaration(
       node, // node,
       node.name, // name,
@@ -82,7 +81,7 @@ export const visitFunction = (
         newParameters, //parameters
         arrowFunctionNode.type, // returnType
         arrowFunctionNode.equalsGreaterThanToken, // equalsGreaterThanToken
-        ts.factory.createBlock([], true) // conciseBody
+        newBlock as ts.ConciseBody // conciseBody
       )
     )
   }

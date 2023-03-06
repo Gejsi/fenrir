@@ -20,12 +20,15 @@ export async function kol(event, context, callback): number | string {
 /**
  * #Fixed
  */
-export function bar(event, context, callback): number {
-    const par = event.par;
+export const bar = (event, context, callback): number => {
     const lambda = new Lambda();
     const a = 2;
     return {
         statusCode: 200,
         body: JSON.stringify(a)
     };
-}
+};
+/**
+ * #Fixed
+ */
+export const joi = (event, context, callback): number => { };

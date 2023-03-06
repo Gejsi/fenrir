@@ -22,10 +22,15 @@ export async function kol(
 /**
  * #Fixed
  */
-export function bar(par): number {
+export const bar = (par: string): number => {
   const lambda = new Lambda()
 
   const a = 2
 
   return a
 }
+
+/**
+ * #Fixed
+ */
+export const joi = (par: string): number => {}
