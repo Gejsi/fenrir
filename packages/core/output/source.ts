@@ -21,6 +21,7 @@ export async function kol(event, context, callback): number | string {
  * #Fixed
  */
 export const bar = (event, context, callback): number => {
+    const par: string = JSON.parse(event.par);
     const lambda = new Lambda();
     const a = 2;
     return {

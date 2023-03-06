@@ -24,16 +24,23 @@ export const visitFunction = (
    * 1. Parameters
    * 2. Function body -> modify return statements
    */
-  ts.forEachChild(node, (outerNode) => {
-    if (ts.isParameter(outerNode)) oldValues.parameters.push(outerNode)
-    else if (ts.isBlock(outerNode))
-      oldValues.block = ts.visitEachChild(outerNode, visitFunctionBody, context)
-    else if (ts.isArrowFunction(outerNode))
+  ts.forEachChild(node, (currentNode) => {
+    if (ts.isParameter(currentNode)) oldValues.parameters.push(currentNode)
+    else if (ts.isBlock(currentNode))
       oldValues.block = ts.visitEachChild(
-        outerNode.body,
+        currentNode,
+        visitFunctionBody,
+        context
+      )
+    else if (ts.isArrowFunction(currentNode)) {
+      oldValues.parameters = [...currentNode.parameters]
+
+      oldValues.block = ts.visitEachChild(
+        currentNode.body,
         visitFunctionBody,
         context
       ) as ts.Block
+    }
   })
 
   const newParameters = [

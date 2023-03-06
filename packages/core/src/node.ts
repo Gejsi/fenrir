@@ -7,7 +7,7 @@ export const isNodeExported = (node: ts.Node) => {
 }
 
 /**
- * Makes an expression as: `JSON.parse(event.x)`
+ * Makes an expression like: `JSON.parse(event.x)`
  */
 const buildJsonParseExpression = (
   parameterName: ts.BindingName
@@ -62,7 +62,7 @@ export const buildEventStatementList = (
 }
 
 /**
- * Makes an expression as: `JSON.stringify(x)`
+ * Makes an expression like: `JSON.stringify(x)`
  */
 const buildJsonStringifyExpression = (
   expression: ts.Expression
