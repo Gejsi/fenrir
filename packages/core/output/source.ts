@@ -8,8 +8,8 @@ type Second = {
  * #Fixed
  */
 export async function kol(event, context, callback): number | string {
-    const first: First = event.first;
-    const half: Record<string, number> = event.half;
+    const first: First = JSON.parse(event.first);
+    const half: Record<string, number> = JSON.parse(event.half);
     const lambda = new Lambda();
     log('Hello');
     return {
@@ -28,7 +28,3 @@ export const bar = (event, context, callback): number => {
         body: JSON.stringify(a)
     };
 };
-/**
- * #Fixed
- */
-export const joi = (event, context, callback): number => { };

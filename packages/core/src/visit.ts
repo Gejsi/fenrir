@@ -8,7 +8,6 @@ const visitFunctionBody: ts.Visitor = (node) => {
   return node
 }
 
-// TODO: json parse events
 export const visitFunction = (
   node: ts.FunctionDeclaration | ts.VariableDeclaration,
   context: ts.TransformationContext

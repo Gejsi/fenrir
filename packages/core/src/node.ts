@@ -6,22 +6,53 @@ export const isNodeExported = (node: ts.Node) => {
   return (modifierFlags & ts.ModifierFlags.Export) !== 0
 }
 
+/**
+ * Makes an expression as: `JSON.parse(event.x)`
+ */
+const buildJsonParseExpression = (
+  parameterName: ts.BindingName
+): ts.Expression => {
+  return ts.factory.createCallExpression(
+    ts.factory.createPropertyAccessExpression(
+      ts.factory.createIdentifier('JSON'), // expression
+      ts.factory.createIdentifier('parse') // memberName
+    ),
+    undefined, // typeArguments
+    [
+      ts.factory.createPropertyAccessExpression(
+        ts.factory.createIdentifier('event'), // expression
+        ts.factory.createIdentifier(parameterName.getText()) // memberName
+      ),
+    ]
+  )
+}
+
+/**
+ * Transforms function parameters into property-access expressions:
+ * ```
+ * // from
+ * function foo(x: Type) {}
+ * ```
+ * ```
+ * // into
+ * function foo() {
+ *   const first: Type = JSON.parse(event.x)
+ * }
+ * ```
+ */
 export const buildEventStatementList = (
   parameters: ts.ParameterDeclaration[]
 ) => {
   return parameters.map((parameter) => {
     return ts.factory.createVariableStatement(
-      undefined,
+      undefined, // modifiers
       ts.factory.createVariableDeclarationList(
         [
           ts.factory.createVariableDeclaration(
             ts.factory.createIdentifier(parameter.name.getText()), // name
             undefined, // exclamation token
             parameter.type, // type
-            ts.factory.createPropertyAccessExpression(
-              ts.factory.createIdentifier('event'), // expression
-              ts.factory.createIdentifier(parameter.name.getText()) // memberName
-            ) // initializer
+            buildJsonParseExpression(parameter.name) // initializer
           ),
         ],
         ts.NodeFlags.Const
@@ -30,7 +61,12 @@ export const buildEventStatementList = (
   })
 }
 
-const buildJsonExpression = (expression: ts.Expression): ts.Expression => {
+/**
+ * Makes an expression as: `JSON.stringify(x)`
+ */
+const buildJsonStringifyExpression = (
+  expression: ts.Expression
+): ts.Expression => {
   return ts.factory.createCallExpression(
     ts.factory.createPropertyAccessExpression(
       ts.factory.createIdentifier('JSON'),
@@ -41,7 +77,23 @@ const buildJsonExpression = (expression: ts.Expression): ts.Expression => {
   )
 }
 
-export const buildReturnExpression = (node: ts.ReturnStatement) => {
+/**
+ * Transforms return statements into object-literals:
+ * ```
+ * // from
+ * return x
+ * ```
+ * ```
+ * // into
+ * return {
+ *  statusCode: 200,
+ *  body: JSON.stringify(x)
+ * }
+ * ```
+ */
+export const buildReturnExpression = (
+  node: ts.ReturnStatement
+): ts.ObjectLiteralExpression => {
   const statusCode = ts.factory.createPropertyAssignment(
     'statusCode',
     ts.factory.createNumericLiteral(200)
@@ -51,7 +103,7 @@ export const buildReturnExpression = (node: ts.ReturnStatement) => {
     node.expression &&
     ts.factory.createPropertyAssignment(
       'body',
-      buildJsonExpression(node.expression)
+      buildJsonStringifyExpression(node.expression)
     )
 
   const properties: ts.ObjectLiteralElementLike[] = []

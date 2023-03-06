@@ -29,8 +29,3 @@ export const bar = (par: string): number => {
 
   return a
 }
-
-/**
- * #Fixed
- */
-export const joi = (par: string): number => {}
