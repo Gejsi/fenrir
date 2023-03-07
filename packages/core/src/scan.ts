@@ -23,7 +23,7 @@ export const noteRegex = /#(?<name>\w+)\s*(?<args>\((\s*\w+,*\s*\w+\s*)+\))?/d
 // dolor sit amet
 // @borrows 2
 
-export type AnnotationData = {
+export type Annotation = {
   name: AnnotationName
   args?: string[]
 }
@@ -40,7 +40,7 @@ const reportSyntaxError = (
   emptyCount: number,
   markerCount: number,
   errorMessage: string,
-  nodeName: string,
+  nodeName: string | undefined,
   node: Node
 ) => {
   let errorText = text + '\n'
@@ -52,9 +52,15 @@ const reportSyntaxError = (
     .getSourceFile()
     .getLineAndCharacterOfPosition(node.getStart())
 
-  errorText += `You have provided an ${errorMessage.toLowerCase()} for '${nodeName}' defined here\n ${filePath}:${
-    line + 1
-  }\n`
+  if (!nodeName) {
+    errorText += `You have provided an ${errorMessage.toLowerCase()} for a call expression defined here\n ${filePath}:${
+      line + 1
+    }\n`
+  } else {
+    errorText += `You have provided an ${errorMessage.toLowerCase()} for '${nodeName}' defined here\n ${filePath}:${
+      line + 1
+    }\n`
+  }
 
   console.log(errorText)
   process.exit(1)
@@ -62,9 +68,9 @@ const reportSyntaxError = (
 
 export const scanAnnotation = (
   text: string,
-  nodeName: string,
+  nodeName: string | undefined,
   node: Node
-): AnnotationData | undefined => {
+): Annotation | undefined => {
   const match = text.match(noteRegex) as Match
 
   if (!match || !match.groups) return

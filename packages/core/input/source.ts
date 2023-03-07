@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { log } from 'console'
 
 type First = 'f' | 's'
@@ -22,7 +24,7 @@ export async function kol(
 /**
  * #Fixed
  */
-export const bar = (par: string): number => {
+export const bar = async (par: string): number => {
   const lambda = new Lambda()
 
   const a = 2

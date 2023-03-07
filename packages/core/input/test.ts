@@ -1,9 +1,9 @@
 /** #Fixed */
-export const t1 = server.get('/ping', async () => {
+server.get('/ping', async () => {
   return 'pong\n'
 })
-
-/** #Fixed */
+/** #Ignored
+ * */
 server.listen({ port: 8080 }, (err: any, address: any) => {
   if (err) {
     console.error(err)
@@ -11,19 +11,18 @@ server.listen({ port: 8080 }, (err: any, address: any) => {
   }
   console.log(`Server listening at ${address}`)
 })
+console.log('testing')
 
-const a = () => {}
+export const a = () => {}
 
 /**
  * #HttpGet
  */
 export const b = () => {}
-
 /** #Fixed */
 export function bar() {}
-
 /**
- * #Fixed
+ * #Ignored
  * dolor sit amet
  * Lorem ipsum
  * @returns 1

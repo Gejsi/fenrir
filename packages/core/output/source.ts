@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { log } from 'console';
 type First = 'f' | 's';
 type Second = {
@@ -20,7 +21,7 @@ export async function kol(event, context, callback): number | string {
 /**
  * #Fixed
  */
-export const bar = (event, context, callback): number => {
+export const bar = async (event, context, callback): number => {
     const par: string = JSON.parse(event.par);
     const lambda = new Lambda();
     const a = 2;

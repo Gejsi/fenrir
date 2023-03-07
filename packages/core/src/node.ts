@@ -6,6 +6,10 @@ export const isNodeExported = (node: ts.Node) => {
   return (modifierFlags & ts.ModifierFlags.Export) !== 0
 }
 
+export const isTopLevelNode = (node: ts.Node) => {
+  return !!node.parent && node.parent.kind === ts.SyntaxKind.SourceFile
+}
+
 /**
  * Makes an expression like: `JSON.parse(event.x)`
  */

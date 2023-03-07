@@ -6,4 +6,5 @@ export const ANNOTATIONS = {
   Fixed: 'Fixed',
   HttpGet: 'HttpGet',
   HttpPost: 'HttpPost',
+  Ignored: 'Ignored',
 } as const

@@ -1,6 +1,6 @@
 import ts from 'typescript'
 import { emitFile } from './emit'
-import { isNodeExported } from './node'
+import { isNodeExported, isTopLevelNode } from './node'
 import { scanAnnotation } from './scan'
 import { visitCallExpression, visitFunction } from './visit'
 
@@ -16,7 +16,7 @@ export function transpile(fileNames: string[] | string) {
   const transformer: ts.TransformerFactory<ts.SourceFile> = (context) => {
     return (sourceFile) => {
       const visitor: ts.Visitor = (node) => {
-        // Only consider exported nodes
+        // Only consider exported nodes for 'Fixed' functions
         if (isNodeExported(node)) {
           // `isFunctionLike()` doesn't detect anonymous functions
           // so variables must be visited as well
@@ -38,16 +38,20 @@ export function transpile(fileNames: string[] | string) {
             const isAnonFunction =
               node.kind === ts.SyntaxKind.VariableDeclaration &&
               ts.isFunctionLike(node.initializer)
-            // detect if this variable is a call expression
-            const isCall =
-              node.kind === ts.SyntaxKind.VariableDeclaration &&
-              node.initializer &&
-              ts.isCallExpression(node.initializer)
 
             if (isFunction || isAnonFunction)
               return visitFunction(node, context)
-            else if (isCall) visitCallExpression(node)
           }
+        }
+
+        if (isTopLevelNode(node)) {
+          const doc = (node as any)?.jsDoc?.at(-1)?.comment
+          if (doc) {
+            const parsedAnnotation = scanAnnotation(doc, undefined, node)
+            if (parsedAnnotation?.name === 'Ignored') return undefined
+          }
+
+          return node
         }
 
         return ts.visitEachChild(node, visitor, context)
@@ -66,8 +70,8 @@ export function transpile(fileNames: string[] | string) {
       const transformedSourceFile = transformedSourceFileList[0]
 
       if (transformedSourceFile) {
-        const sourceCode = printer.printFile(transformedSourceFile)
-        emitFile(transformedSourceFile, sourceCode)
+        const transformedSourceCode = printer.printFile(transformedSourceFile)
+        emitFile(transformedSourceFile, transformedSourceCode)
       }
     }
   })
