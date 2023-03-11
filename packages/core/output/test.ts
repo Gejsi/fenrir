@@ -1,11 +1,6 @@
-/** #Fixed
- * */
-server.listen({ port: 8080 }, (err: any, address: any) => {
-    if (err) {
-        console.error(err);
-        process.exit(1);
-    }
-    console.log(`Server listening at ${address}`);
+/** #Fixed */
+server.get('/ping', async () => {
+    return 'pong\n';
 });
 console.log('testing');
 export const a = () => { };

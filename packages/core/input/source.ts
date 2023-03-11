@@ -24,6 +24,26 @@ export async function kol(
 /**
  * #Fixed
  */
+export async function foo(
+  first: First,
+  half: Record<string, number>
+): number | string {
+  const lambda = new Lambda()
+  log('Hello')
+
+  return [1, 2]
+}
+
+console.log('test')
+
+/**
+ * #Ignored
+ */
+console.log('test 2')
+
+/**
+ * #Fixed
+ */
 export const bar = async (par: string): number => {
   const lambda = new Lambda()
 

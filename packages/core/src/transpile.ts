@@ -2,7 +2,12 @@ import ts from 'typescript'
 import { emitFile } from './emit'
 import { isNodeExported, isTopLevelNode } from './node'
 import { scanAnnotation } from './scan'
-import { visitCallExpression, visitFunction } from './visit'
+import { visitFunction } from './visit'
+import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
+import type {
+  AwsFunctionHandler,
+  Serverless as ServerlessConfig,
+} from 'serverless/aws'
 
 export function transpile(fileNames: string[] | string) {
   const files = Array.isArray(fileNames)
@@ -12,6 +17,7 @@ export function transpile(fileNames: string[] | string) {
   const program = ts.createProgram(files, { allowJs: true })
   const checker = program.getTypeChecker()
   const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed })
+  const functionDetails = new Map<string, AwsFunctionHandler>()
 
   const transformer: ts.TransformerFactory<ts.SourceFile> = (context) => {
     return (sourceFile) => {
@@ -23,6 +29,8 @@ export function transpile(fileNames: string[] | string) {
           if (ts.isFunctionLike(node) || ts.isVariableDeclaration(node)) {
             const symbol = node.name && checker.getSymbolAtLocation(node.name)
             if (!symbol) return
+
+            functionDetails.set(symbol.getName(), { handler: 'temp' })
 
             const doc = ts
               .displayPartsToString(symbol.getDocumentationComment(checker))
@@ -44,8 +52,9 @@ export function transpile(fileNames: string[] | string) {
           }
         }
 
-        if (isTopLevelNode(node)) {
-          const doc = (node as any)?.jsDoc?.at(-1)?.comment
+        if (isTopLevelNode(node) && !ts.isVariableStatement(node)) {
+          const doc: string | undefined = (node as any)?.jsDoc?.at(-1)?.comment
+
           if (doc) {
             const parsedAnnotation = scanAnnotation(doc, undefined, node)
             if (parsedAnnotation?.name === 'Ignored') return undefined
@@ -75,4 +84,15 @@ export function transpile(fileNames: string[] | string) {
       }
     }
   })
+
+  const slsConfig = ts.sys.readFile('input/serverless.yml')
+  const parsedConfig: ServerlessConfig = parseYaml(slsConfig!)
+
+  parsedConfig.functions = {
+    ...parsedConfig.functions,
+    ...Object.fromEntries(functionDetails),
+  }
+
+  const transformedConfig = stringifyYaml(parsedConfig)
+  console.log(transformedConfig)
 }

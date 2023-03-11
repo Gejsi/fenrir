@@ -26,13 +26,13 @@ export const visitFunction = (
    */
   ts.forEachChild(node, (currentNode) => {
     if (ts.isParameter(currentNode)) oldValues.parameters.push(currentNode)
-    else if (ts.isBlock(currentNode))
+    else if (ts.isBlock(currentNode)) {
       oldValues.block = ts.visitEachChild(
         currentNode,
         visitFunctionBody,
         context
       )
-    else if (ts.isArrowFunction(currentNode)) {
+    } else if (ts.isArrowFunction(currentNode)) {
       oldValues.parameters = [...currentNode.parameters]
 
       oldValues.block = ts.visitEachChild(
