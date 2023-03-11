@@ -1,20 +1,24 @@
 import ts from 'typescript'
-import { emitFile } from './emit'
+import { emitFile, emitServerlessConfig } from './emit'
 import { isNodeExported, isTopLevelNode } from './node'
 import { scanAnnotation } from './scan'
 import { visitFunction } from './visit'
-import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
-import type {
-  AwsFunctionHandler,
-  Serverless as ServerlessConfig,
-} from 'serverless/aws'
+import type { AwsFunctionHandler } from 'serverless/aws'
 
-export function transpile(fileNames: string[] | string) {
-  const files = Array.isArray(fileNames)
-    ? fileNames
-    : ts.sys.readDirectory(fileNames)
+type Options = {
+  files: string[] | string
+  serverlessConfig: string
+  outputDirectory: string
+}
 
-  const program = ts.createProgram(files, { allowJs: true })
+export function transpile({
+  files,
+  serverlessConfig,
+  outputDirectory,
+}: Options) {
+  const rootFiles = Array.isArray(files) ? files : ts.sys.readDirectory(files)
+
+  const program = ts.createProgram(rootFiles, { allowJs: true })
   const checker = program.getTypeChecker()
   const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed })
   const functionDetails = new Map<string, AwsFunctionHandler>()
@@ -80,19 +84,10 @@ export function transpile(fileNames: string[] | string) {
 
       if (transformedSourceFile) {
         const transformedSourceCode = printer.printFile(transformedSourceFile)
-        emitFile(transformedSourceFile, transformedSourceCode)
+        emitFile(outputDirectory, transformedSourceFile, transformedSourceCode)
       }
     }
   })
 
-  const slsConfig = ts.sys.readFile('input/serverless.yml')
-  const parsedConfig: ServerlessConfig = parseYaml(slsConfig!)
-
-  parsedConfig.functions = {
-    ...parsedConfig.functions,
-    ...Object.fromEntries(functionDetails),
-  }
-
-  const transformedConfig = stringifyYaml(parsedConfig)
-  console.log(transformedConfig)
+  emitServerlessConfig(serverlessConfig, outputDirectory, functionDetails)
 }

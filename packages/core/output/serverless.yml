@@ -1,0 +1,30 @@
+org: gejsi
+app: funx
+service: funx
+frameworkVersion: "3"
+provider:
+  name: aws
+  runtime: nodejs14.x
+  region: eu-central-1
+  environment:
+    MY_SECRET: ${file(./config.${opt:stage, 'dev'}.json):CREDS}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - lambda:InvokeFunction
+        - lambda:InvokeAsync
+      Resource: "*"
+functions:
+  hi:
+    handler: hello.hi
+  hello:
+    handler: hello.greet
+  kol:
+    handler: temp
+  foo:
+    handler: temp
+  bar:
+    handler: temp
+plugins:
+  - serverless-offline
+  - serverless-esbuild
