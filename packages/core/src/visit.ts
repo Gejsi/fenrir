@@ -32,7 +32,11 @@ export const visitFunction = (
         visitFunctionBody,
         context
       )
-    } else if (ts.isArrowFunction(currentNode)) {
+    } else if (
+      // detect anonymous functions
+      ts.isArrowFunction(currentNode) ||
+      ts.isFunctionExpression(currentNode)
+    ) {
       oldValues.parameters = [...currentNode.parameters]
 
       oldValues.block = ts.visitEachChild(
@@ -61,7 +65,8 @@ export const visitFunction = (
     )
   }
 
-  if (ts.isFunctionDeclaration(node)) {
+  // detect plain `function foo() {}`
+  if (ts.isFunctionDeclaration(node))
     return ts.factory.updateFunctionDeclaration(
       node, // node
       ts.getModifiers(node), // modifiers
@@ -72,23 +77,40 @@ export const visitFunction = (
       node.type, // returnType
       newBlock // block
     )
-  } else {
-    const arrowFunctionNode = node.initializer as ts.ArrowFunction
+
+  // detect anonymous functions
+  if (
+    node.initializer &&
+    (ts.isArrowFunction(node.initializer) ||
+      ts.isFunctionExpression(node.initializer))
+  ) {
+    const functionNode = node.initializer
 
     return ts.factory.updateVariableDeclaration(
       node, // node,
       node.name, // name,
       node.exclamationToken, // exclamationToken,
       node.type, // type
-      ts.factory.updateArrowFunction(
-        arrowFunctionNode, // node
-        ts.getModifiers(arrowFunctionNode), // modifiers
-        arrowFunctionNode.typeParameters, // typeParameters
-        newParameters, //parameters
-        arrowFunctionNode.type, // returnType
-        arrowFunctionNode.equalsGreaterThanToken, // equalsGreaterThanToken
-        newBlock as ts.ConciseBody // conciseBody
-      )
+      functionNode.kind === ts.SyntaxKind.ArrowFunction
+        ? ts.factory.updateArrowFunction(
+            functionNode, // node
+            ts.getModifiers(functionNode), // modifiers
+            functionNode.typeParameters, // typeParameters
+            newParameters, //parameters
+            functionNode.type, // returnType
+            functionNode.equalsGreaterThanToken, // equalsGreaterThanToken
+            newBlock as ts.ConciseBody // conciseBody
+          )
+        : ts.factory.updateFunctionExpression(
+            functionNode, // node
+            ts.getModifiers(functionNode), // modifiers
+            functionNode.asteriskToken, // asteriskToken
+            functionNode.name, // name
+            functionNode.typeParameters, // typeParameters
+            newParameters, // parameters
+            functionNode.type, // returnType
+            newBlock! // block
+          )
     )
   }
 }

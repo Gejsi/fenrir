@@ -14,7 +14,7 @@ export const emitFile = (
 ) => {
   if (!ts.sys.directoryExists(outputDirectory)) {
     console.log(
-      `The output directory has been created at\n${ts.sys.resolvePath(
+      `The output directory has been created at:\n${ts.sys.resolvePath(
         outputDirectory
       )}`
     )

@@ -19,11 +19,13 @@ functions:
     handler: hello.hi
   hello:
     handler: hello.greet
-  kol:
+  count:
     handler: temp
   foo:
     handler: temp
   bar:
+    handler: temp
+  lok:
     handler: temp
 plugins:
   - serverless-offline

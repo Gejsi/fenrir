@@ -16,7 +16,9 @@ export function transpile({
   serverlessConfig,
   outputDirectory,
 }: Options) {
-  const rootFiles = Array.isArray(files) ? files : ts.sys.readDirectory(files)
+  const rootFiles = Array.isArray(files)
+    ? files.filter(ts.sys.fileExists)
+    : ts.sys.readDirectory(files)
 
   const program = ts.createProgram(rootFiles, { allowJs: true })
   const checker = program.getTypeChecker()
@@ -72,6 +74,18 @@ export function transpile({
 
       return ts.visitNode(sourceFile, visitor)
     }
+  }
+
+  if (!program.getSourceFiles().length) {
+    console.log('Input files have not been provided to the transpiler.')
+    return
+  }
+
+  if (!ts.sys.fileExists(serverlessConfig)) {
+    console.log(
+      '`serverless.yml` configuration file has not been provided to the transpiler.'
+    )
+    return
   }
 
   program.getSourceFiles().forEach((sourceFile) => {
