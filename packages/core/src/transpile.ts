@@ -4,23 +4,30 @@ import { isNodeExported, isTopLevelNode } from './node'
 import { scanAnnotation } from './scan'
 import { visitFunction } from './visit'
 import type { AwsFunctionHandler } from 'serverless/aws'
+import { parse as parseFileName } from 'path'
 
 type Options = {
   files: string[] | string
-  serverlessConfig: string
-  outputDirectory: string
+  serverlessConfigPath?: string
+  outputDirectory?: string
 }
 
 export function transpile({
   files,
-  serverlessConfig,
-  outputDirectory,
+  serverlessConfigPath,
+  outputDirectory = 'functions',
 }: Options) {
   const rootFiles = Array.isArray(files)
     ? files.filter(ts.sys.fileExists)
     : ts.sys.readDirectory(files)
 
   const program = ts.createProgram(rootFiles, { allowJs: true })
+
+  if (!program.getSourceFiles().length) {
+    console.log('Input files have not been provided to the transpiler.')
+    return
+  }
+
   const checker = program.getTypeChecker()
   const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed })
   const functionDetails = new Map<string, AwsFunctionHandler>()
@@ -36,7 +43,12 @@ export function transpile({
             const symbol = node.name && checker.getSymbolAtLocation(node.name)
             if (!symbol) return
 
-            functionDetails.set(symbol.getName(), { handler: 'temp' })
+            functionDetails.set(symbol.getName(), {
+              handler:
+                parseFileName(sourceFile.fileName).name +
+                '.' +
+                symbol.getName(),
+            })
 
             const doc = ts
               .displayPartsToString(symbol.getDocumentationComment(checker))
@@ -76,17 +88,26 @@ export function transpile({
     }
   }
 
-  if (!program.getSourceFiles().length) {
-    console.log('Input files have not been provided to the transpiler.')
-    return
+  if (!serverlessConfigPath) {
+    if (Array.isArray(files)) {
+      console.log(
+        '`serverless.yml` configuration file has not been provided to the transpiler.'
+      )
+      return
+    }
+
+    // in this case `files` is a directory
+    const configFilePath = files + '/serverless.yml'
+
+    if (!configFilePath) {
+      console.log('Failed to load the `serverless.yml` configuration file.')
+      return
+    }
+
+    serverlessConfigPath = configFilePath
   }
 
-  if (!ts.sys.fileExists(serverlessConfig)) {
-    console.log(
-      '`serverless.yml` configuration file has not been provided to the transpiler.'
-    )
-    return
-  }
+  emitServerlessConfig(serverlessConfigPath, outputDirectory, functionDetails)
 
   program.getSourceFiles().forEach((sourceFile) => {
     if (!sourceFile.isDeclarationFile) {
@@ -102,6 +123,4 @@ export function transpile({
       }
     }
   })
-
-  emitServerlessConfig(serverlessConfig, outputDirectory, functionDetails)
 }
