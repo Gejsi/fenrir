@@ -95,6 +95,7 @@ const buildJsonStringifyExpression = (
  * }
  * ```
  */
+// TODO: fix naked returns
 export const buildReturnExpression = (
   node: ts.ReturnStatement
 ): ts.ObjectLiteralExpression => {

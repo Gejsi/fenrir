@@ -34,20 +34,23 @@ export async function foo(
   return [1, 2]
 }
 
+/**
+ * #Ignored
+ */
 console.log('test')
 
 /**
  * #Ignored
  */
-console.log('test 2')
+const a = console.log('test 2')
 
 /**
- * #Fixed
+ * #Ignored
  */
 export const bar = async (par: string): number => {
   const lambda = new Lambda()
 
   const a = 2
 
-  return a
+  return
 }

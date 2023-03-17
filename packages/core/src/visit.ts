@@ -1,35 +1,33 @@
 import ts from 'typescript'
 import { buildEventStatementList, buildReturnExpression } from './node'
 
-const visitFunctionBody: ts.Visitor = (node) => {
+const updateFunctionBody: ts.Visitor = (node) => {
   if (ts.isReturnStatement(node))
     return ts.factory.updateReturnStatement(node, buildReturnExpression(node))
 
   return node
 }
 
-export const visitFunction = (
+type FunctionDetails = {
+  parameters: ts.ParameterDeclaration[]
+  block?: ts.Block
+}
+
+const updateFunction = (
   node: ts.FunctionDeclaration | ts.VariableDeclaration,
   context: ts.TransformationContext
-) => {
-  const oldValues: {
-    parameters: ts.ParameterDeclaration[]
-    block?: ts.Block
-  } = {
+): FunctionDetails => {
+  const details: FunctionDetails = {
     parameters: [],
     block: undefined,
   }
 
-  /* Loop through functions to get
-   * 1. Parameters
-   * 2. Function body -> modify return statements
-   */
   ts.forEachChild(node, (currentNode) => {
-    if (ts.isParameter(currentNode)) oldValues.parameters.push(currentNode)
+    if (ts.isParameter(currentNode)) details.parameters.push(currentNode)
     else if (ts.isBlock(currentNode)) {
-      oldValues.block = ts.visitEachChild(
+      details.block = ts.visitEachChild(
         currentNode,
-        visitFunctionBody,
+        updateFunctionBody,
         context
       )
     } else if (
@@ -37,11 +35,11 @@ export const visitFunction = (
       ts.isArrowFunction(currentNode) ||
       ts.isFunctionExpression(currentNode)
     ) {
-      oldValues.parameters = [...currentNode.parameters]
+      details.parameters = [...currentNode.parameters]
 
-      oldValues.block = ts.visitEachChild(
+      details.block = ts.visitEachChild(
         currentNode.body,
-        visitFunctionBody,
+        updateFunctionBody,
         context
       ) as ts.Block
     }
@@ -53,68 +51,83 @@ export const visitFunction = (
     ts.factory.createParameterDeclaration(undefined, undefined, 'callback'),
   ]
 
-  let newBlock = oldValues.block
+  let newBlock = details.block
   // if there are parameters to the function,
   // they should be mapped to the `event` cloud function parameter
-  if (oldValues.parameters.length && oldValues.block?.statements) {
-    const eventStatementList = buildEventStatementList(oldValues.parameters)
+  if (details.parameters.length && details.block?.statements) {
+    const eventStatementList = buildEventStatementList(details.parameters)
 
     newBlock = ts.factory.createBlock(
-      [...eventStatementList, ...oldValues.block.statements],
+      [...eventStatementList, ...details.block.statements],
       true
     )
   }
 
-  // detect plain `function foo() {}`
-  if (ts.isFunctionDeclaration(node))
-    return ts.factory.updateFunctionDeclaration(
-      node, // node
-      ts.getModifiers(node), // modifiers
-      node.asteriskToken, // asteriskToken
-      node.name, // name
-      node.typeParameters, // typeParameters
-      newParameters, // parameters
-      node.type, // returnType
-      newBlock // block
-    )
+  return { parameters: newParameters, block: newBlock }
+}
 
-  // detect anonymous functions
+export const visitAnonymousFunction = (
+  varStatement: ts.VariableStatement,
+  varDeclaration: ts.VariableDeclaration,
+  context: ts.TransformationContext
+) => {
+  const { parameters, block } = updateFunction(varDeclaration, context)
   if (
-    node.initializer &&
-    (ts.isArrowFunction(node.initializer) ||
-      ts.isFunctionExpression(node.initializer))
+    varDeclaration.initializer &&
+    (ts.isArrowFunction(varDeclaration.initializer) ||
+      ts.isFunctionExpression(varDeclaration.initializer))
   ) {
-    const functionNode = node.initializer
+    const functionNode = varDeclaration.initializer
 
-    return ts.factory.updateVariableDeclaration(
-      node, // node,
-      node.name, // name,
-      node.exclamationToken, // exclamationToken,
-      node.type, // type
-      functionNode.kind === ts.SyntaxKind.ArrowFunction
-        ? ts.factory.updateArrowFunction(
-            functionNode, // node
-            ts.getModifiers(functionNode), // modifiers
-            functionNode.typeParameters, // typeParameters
-            newParameters, //parameters
-            functionNode.type, // returnType
-            functionNode.equalsGreaterThanToken, // equalsGreaterThanToken
-            newBlock as ts.ConciseBody // conciseBody
-          )
-        : ts.factory.updateFunctionExpression(
-            functionNode, // node
-            ts.getModifiers(functionNode), // modifiers
-            functionNode.asteriskToken, // asteriskToken
-            functionNode.name, // name
-            functionNode.typeParameters, // typeParameters
-            newParameters, // parameters
-            functionNode.type, // returnType
-            newBlock! // block
-          )
+    return ts.factory.updateVariableStatement(
+      varStatement,
+      ts.getModifiers(varStatement),
+      ts.factory.updateVariableDeclarationList(varStatement.declarationList, [
+        ts.factory.updateVariableDeclaration(
+          varDeclaration, // node,
+          varDeclaration.name, // name,
+          varDeclaration.exclamationToken, // exclamationToken,
+          varDeclaration.type, // type
+          functionNode.kind === ts.SyntaxKind.ArrowFunction
+            ? ts.factory.updateArrowFunction(
+                functionNode, // node
+                ts.getModifiers(functionNode), // modifiers
+                functionNode.typeParameters, // typeParameters
+                parameters, //parameters
+                functionNode.type, // returnType
+                functionNode.equalsGreaterThanToken, // equalsGreaterThanToken
+                block as ts.ConciseBody // conciseBody
+              )
+            : ts.factory.updateFunctionExpression(
+                functionNode, // node
+                ts.getModifiers(functionNode), // modifiers
+                functionNode.asteriskToken, // asteriskToken
+                functionNode.name, // name
+                functionNode.typeParameters, // typeParameters
+                parameters, // parameters
+                functionNode.type, // returnType
+                block! // block
+              )
+        ),
+      ])
     )
   }
 }
 
-export const visitCallExpression = (node: ts.Node) => {
-  console.log('visiting call')
+export const visitFunction = (
+  node: ts.FunctionDeclaration,
+  context: ts.TransformationContext
+) => {
+  const { parameters, block } = updateFunction(node, context)
+
+  return ts.factory.updateFunctionDeclaration(
+    node, // node
+    ts.getModifiers(node), // modifiers
+    node.asteriskToken, // asteriskToken
+    node.name, // name
+    node.typeParameters, // typeParameters
+    parameters, // parameters
+    node.type, // returnType
+    block // block
+  )
 }

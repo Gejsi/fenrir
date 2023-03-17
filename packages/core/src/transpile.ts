@@ -2,7 +2,7 @@ import ts from 'typescript'
 import { emitFile, emitServerlessConfig } from './emit'
 import { isNodeExported, isTopLevelNode } from './node'
 import { scanAnnotation } from './scan'
-import { visitFunction } from './visit'
+import { visitAnonymousFunction, visitFunction } from './visit'
 import type { AwsFunctionHandler } from 'serverless/aws'
 import { parse as parseFileName } from 'path'
 
@@ -39,8 +39,15 @@ export function transpile({
         if (isNodeExported(node)) {
           // `isFunctionLike()` doesn't detect anonymous functions
           // so variables must be visited as well
-          if (ts.isFunctionLike(node) || ts.isVariableDeclaration(node)) {
-            const symbol = node.name && checker.getSymbolAtLocation(node.name)
+          if (ts.isFunctionLike(node) || ts.isVariableStatement(node)) {
+            const currentNode =
+              node.kind === ts.SyntaxKind.VariableStatement
+                ? node.declarationList.declarations[0]
+                : node
+            if (!currentNode) return
+
+            const symbol =
+              currentNode.name && checker.getSymbolAtLocation(currentNode.name)
             if (!symbol) return
 
             functionDetails.set(symbol.getName(), {
@@ -50,32 +57,41 @@ export function transpile({
                 symbol.getName(),
             })
 
-            const doc = ts
+            const comment = ts
               .displayPartsToString(symbol.getDocumentationComment(checker))
               .split('\n')[0]
-            if (!doc) return
+            if (!comment) return
 
-            const parsedAnnotation = scanAnnotation(doc, symbol.getName(), node)
-            if (!parsedAnnotation) return
+            const parsedAnnotation = scanAnnotation(
+              comment,
+              symbol.getName(),
+              currentNode
+            )
+            if (!parsedAnnotation || parsedAnnotation.name === 'Ignored') return
 
             // detect if this node is a normal function
-            const isFunction = node.kind === ts.SyntaxKind.FunctionDeclaration
+            const isFunction =
+              currentNode.kind === ts.SyntaxKind.FunctionDeclaration
             // detect if this variable is an anonymous function
             const isAnonFunction =
-              node.kind === ts.SyntaxKind.VariableDeclaration &&
-              ts.isFunctionLike(node.initializer)
+              currentNode.kind === ts.SyntaxKind.VariableDeclaration &&
+              ts.isFunctionLike(currentNode.initializer) &&
+              node.kind === ts.SyntaxKind.VariableStatement
 
-            if (isFunction || isAnonFunction)
-              return visitFunction(node, context)
+            if (isFunction) return visitFunction(currentNode, context)
+            else if (isAnonFunction)
+              return visitAnonymousFunction(node, currentNode, context)
           }
         }
 
-        if (isTopLevelNode(node) && !ts.isVariableStatement(node)) {
-          const doc: string | undefined = (node as any)?.jsDoc?.at(-1)?.comment
+        if (isTopLevelNode(node)) {
+          const comment: string | undefined = (node as any)?.jsDoc?.at(
+            -1
+          )?.comment
 
-          if (doc) {
-            const parsedAnnotation = scanAnnotation(doc, undefined, node)
-            if (parsedAnnotation?.name === 'Ignored') return undefined
+          if (comment) {
+            const parsedAnnotation = scanAnnotation(comment, undefined, node)
+            if (parsedAnnotation?.name === 'Ignored') return
           }
 
           return node
@@ -111,11 +127,10 @@ export function transpile({
 
   program.getSourceFiles().forEach((sourceFile) => {
     if (!sourceFile.isDeclarationFile) {
-      const { transformed: transformedSourceFileList } = ts.transform(
-        sourceFile,
-        [transformer]
-      )
-      const transformedSourceFile = transformedSourceFileList[0]
+      const { transformed: transformedSourceFiles } = ts.transform(sourceFile, [
+        transformer,
+      ])
+      const transformedSourceFile = transformedSourceFiles[0]
 
       if (transformedSourceFile) {
         const transformedSourceCode = printer.printFile(transformedSourceFile)
