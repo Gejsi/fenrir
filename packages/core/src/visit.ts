@@ -8,7 +8,7 @@ const updateFunctionBody: ts.Visitor = (node) => {
   return node
 }
 
-type FunctionDetails = {
+type FunctionInfo = {
   parameters: ts.ParameterDeclaration[]
   block?: ts.Block
 }
@@ -16,28 +16,24 @@ type FunctionDetails = {
 const updateFunction = (
   node: ts.FunctionDeclaration | ts.VariableDeclaration,
   context: ts.TransformationContext
-): FunctionDetails => {
-  const details: FunctionDetails = {
+): FunctionInfo => {
+  const info: FunctionInfo = {
     parameters: [],
     block: undefined,
   }
 
   ts.forEachChild(node, (currentNode) => {
-    if (ts.isParameter(currentNode)) details.parameters.push(currentNode)
+    if (ts.isParameter(currentNode)) info.parameters.push(currentNode)
     else if (ts.isBlock(currentNode)) {
-      details.block = ts.visitEachChild(
-        currentNode,
-        updateFunctionBody,
-        context
-      )
+      info.block = ts.visitEachChild(currentNode, updateFunctionBody, context)
     } else if (
       // detect anonymous functions
       ts.isArrowFunction(currentNode) ||
       ts.isFunctionExpression(currentNode)
     ) {
-      details.parameters = [...currentNode.parameters]
+      info.parameters = [...currentNode.parameters]
 
-      details.block = ts.visitEachChild(
+      info.block = ts.visitEachChild(
         currentNode.body,
         updateFunctionBody,
         context
@@ -51,14 +47,14 @@ const updateFunction = (
     ts.factory.createParameterDeclaration(undefined, undefined, 'callback'),
   ]
 
-  let newBlock = details.block
+  let newBlock = info.block
   // if there are parameters to the function,
   // they should be mapped to the `event` cloud function parameter
-  if (details.parameters.length && details.block?.statements) {
-    const eventStatementList = buildEventStatementList(details.parameters)
+  if (info.parameters.length && info.block?.statements) {
+    const eventStatementList = buildEventStatementList(info.parameters)
 
     newBlock = ts.factory.createBlock(
-      [...eventStatementList, ...details.block.statements],
+      [...eventStatementList, ...info.block.statements],
       true
     )
   }
@@ -70,7 +66,7 @@ export const visitAnonymousFunction = (
   varStatement: ts.VariableStatement,
   varDeclaration: ts.VariableDeclaration,
   context: ts.TransformationContext
-) => {
+): ts.VariableStatement | undefined => {
   const { parameters, block } = updateFunction(varDeclaration, context)
   if (
     varDeclaration.initializer &&
@@ -78,7 +74,6 @@ export const visitAnonymousFunction = (
       ts.isFunctionExpression(varDeclaration.initializer))
   ) {
     const functionNode = varDeclaration.initializer
-
     return ts.factory.updateVariableStatement(
       varStatement,
       ts.getModifiers(varStatement),

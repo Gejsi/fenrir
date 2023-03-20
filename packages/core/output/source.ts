@@ -18,16 +18,9 @@ export async function kol(event, context, callback): number | string {
         body: JSON.stringify([1, 2])
     };
 }
-/**
- * #Fixed
- */
-export async function foo(event, context, callback): number | string {
-    const first: First = JSON.parse(event.first);
-    const half: Record<string, number> = JSON.parse(event.half);
+export async function foo(first: First, half: Record<string, number>): number | string {
     const lambda = new Lambda();
     log('Hello');
-    return {
-        statusCode: 200,
-        body: JSON.stringify([1, 2])
-    };
+    return [1, 2];
 }
+console.log('test');

@@ -19,6 +19,8 @@ functions:
     handler: hello.hi
   hello:
     handler: hello.greet
+  kol:
+    handler: source.kol
 plugins:
   - serverless-offline
   - serverless-esbuild

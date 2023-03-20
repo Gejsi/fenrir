@@ -1,10 +1,9 @@
 import ts from 'typescript'
 import { emitFile, emitServerlessConfig } from './emit'
-import { isNodeExported, isTopLevelNode } from './node'
-import { scanAnnotation } from './scan'
-import { visitAnonymousFunction, visitFunction } from './visit'
+import { isTopLevelNode } from './node'
 import type { AwsFunctionHandler } from 'serverless/aws'
-import { parse as parseFileName } from 'path'
+import { scanAnnotation } from './scan'
+import { transformFixedFunction } from './transform'
 
 type Options = {
   files: string[] | string
@@ -35,54 +34,16 @@ export function transpile({
   const transformer: ts.TransformerFactory<ts.SourceFile> = (context) => {
     return (sourceFile) => {
       const visitor: ts.Visitor = (node) => {
-        // Only consider exported nodes for 'Fixed' functions
-        if (isNodeExported(node)) {
-          // `isFunctionLike()` doesn't detect anonymous functions
-          // so variables must be visited as well
-          if (ts.isFunctionLike(node) || ts.isVariableStatement(node)) {
-            const currentNode =
-              node.kind === ts.SyntaxKind.VariableStatement
-                ? node.declarationList.declarations[0]
-                : node
-            if (!currentNode) return
+        const fixedResult = transformFixedFunction(
+          node,
+          checker,
+          context,
+          sourceFile,
+          functionDetails
+        )
 
-            const symbol =
-              currentNode.name && checker.getSymbolAtLocation(currentNode.name)
-            if (!symbol) return
-
-            functionDetails.set(symbol.getName(), {
-              handler:
-                parseFileName(sourceFile.fileName).name +
-                '.' +
-                symbol.getName(),
-            })
-
-            const comment = ts
-              .displayPartsToString(symbol.getDocumentationComment(checker))
-              .split('\n')[0]
-            if (!comment) return
-
-            const parsedAnnotation = scanAnnotation(
-              comment,
-              symbol.getName(),
-              currentNode
-            )
-            if (!parsedAnnotation || parsedAnnotation.name === 'Ignored') return
-
-            // detect if this node is a normal function
-            const isFunction =
-              currentNode.kind === ts.SyntaxKind.FunctionDeclaration
-            // detect if this variable is an anonymous function
-            const isAnonFunction =
-              currentNode.kind === ts.SyntaxKind.VariableDeclaration &&
-              ts.isFunctionLike(currentNode.initializer) &&
-              node.kind === ts.SyntaxKind.VariableStatement
-
-            if (isFunction) return visitFunction(currentNode, context)
-            else if (isAnonFunction)
-              return visitAnonymousFunction(node, currentNode, context)
-          }
-        }
+        // if the transformation was successful, return the new node
+        if (fixedResult) return fixedResult
 
         if (isTopLevelNode(node)) {
           const comment: string | undefined = (node as any)?.jsDoc?.at(
@@ -97,6 +58,7 @@ export function transpile({
           return node
         }
 
+        // ...otherwise, keep traversing the AST
         return ts.visitEachChild(node, visitor, context)
       }
 
@@ -123,8 +85,6 @@ export function transpile({
     serverlessConfigPath = configFilePath
   }
 
-  emitServerlessConfig(serverlessConfigPath, outputDirectory, functionDetails)
-
   program.getSourceFiles().forEach((sourceFile) => {
     if (!sourceFile.isDeclarationFile) {
       const { transformed: transformedSourceFiles } = ts.transform(sourceFile, [
@@ -138,4 +98,6 @@ export function transpile({
       }
     }
   })
+
+  emitServerlessConfig(serverlessConfigPath, outputDirectory, functionDetails)
 }

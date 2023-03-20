@@ -21,9 +21,6 @@ export async function kol(
   return [1, 2]
 }
 
-/**
- * #Fixed
- */
 export async function foo(
   first: First,
   half: Record<string, number>
@@ -34,9 +31,6 @@ export async function foo(
   return [1, 2]
 }
 
-/**
- * #Ignored
- */
 console.log('test')
 
 /**
