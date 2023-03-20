@@ -18,9 +18,15 @@ export async function kol(event, context, callback): number | string {
         body: JSON.stringify([1, 2])
     };
 }
-export async function foo(first: First, half: Record<string, number>): number | string {
-    const lambda = new Lambda();
-    log('Hello');
-    return [1, 2];
-}
 console.log('test');
+/**
+ * #Fixed
+ */
+export const bar = async (event, context, callback): number => {
+    const par: string = JSON.parse(event.par);
+    const lambda = new Lambda();
+    const a = 2;
+    return {
+        statusCode: 200
+    };
+};

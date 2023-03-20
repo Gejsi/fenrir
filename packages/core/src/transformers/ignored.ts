@@ -21,6 +21,7 @@ export const ignoredTransformer = () => {
 
           return node
         }
+
         return ts.visitEachChild(node, visitor, context)
       }
 

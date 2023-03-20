@@ -21,6 +21,10 @@ export async function kol(
   return [1, 2]
 }
 
+/**
+ * #Ignored
+ * ahahahhaha
+ */
 export async function foo(
   first: First,
   half: Record<string, number>
@@ -35,11 +39,12 @@ console.log('test')
 
 /**
  * #Ignored
+ * ahahahhaha
  */
 const a = console.log('test 2')
 
 /**
- * #Ignored
+ * #Fixed
  */
 export const bar = async (par: string): number => {
   const lambda = new Lambda()

@@ -6,7 +6,6 @@ import type {
   Serverless as ServerlessConfig,
 } from 'serverless/aws'
 
-// FIX: resolve `output/undefined` folder emit
 export const emitFile = (
   outputDirectory: string,
   sourceFile: ts.SourceFile,

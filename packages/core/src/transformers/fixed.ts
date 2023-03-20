@@ -1,16 +1,16 @@
 import ts from 'typescript'
-import type { AwsFunctionHandler } from 'serverless/aws'
 import { isNodeExported } from '../node'
 import { visitAnonymousFunction, visitFunction } from '../visit'
 import { parse as parseFileName } from 'path'
 import { scanAnnotation } from '../scan'
+import { ServerlessConfigFunctions } from '../transpile'
 
 export function transformFunction(
   node: ts.Node,
   checker: ts.TypeChecker,
   context: ts.TransformationContext,
   sourceFile: ts.SourceFile,
-  functionDetails: Map<string, AwsFunctionHandler>
+  functionDetails: ServerlessConfigFunctions
 ): ts.Node | undefined {
   // Only consider exported nodes
   if (!isNodeExported(node)) return
@@ -38,7 +38,7 @@ export function transformFunction(
       symbol.getName(),
       currentNode
     )
-    if (!parsedAnnotation || parsedAnnotation.name === 'Ignored') return
+    if (!parsedAnnotation) return
 
     // add function details that will be used for emitting `serverless.yml`
     functionDetails.set(symbol.getName(), {
@@ -59,7 +59,10 @@ export function transformFunction(
   }
 }
 
-export const fixedTransformer = (checker: ts.TypeChecker) => {
+export const fixedTransformer = (
+  checker: ts.TypeChecker,
+  functionDetails: ServerlessConfigFunctions
+) => {
   const factory: ts.TransformerFactory<ts.SourceFile> = (context) => {
     return (sourceFile) => {
       const visitor: ts.Visitor = (node) => {
@@ -68,7 +71,7 @@ export const fixedTransformer = (checker: ts.TypeChecker) => {
           checker,
           context,
           sourceFile,
-          new Map() // FIX: reimplement functionDetails
+          functionDetails
         )
 
         // if the function transformation was successful, return the new node...

@@ -1,16 +1,18 @@
 import ts from 'typescript'
+import type { ServerlessConfigFunctions } from '../transpile'
 import { fixedTransformer } from './fixed'
 import { ignoredTransformer } from './ignored'
 
-const transformers = [fixedTransformer, ignoredTransformer]
+const transformers = [ignoredTransformer, fixedTransformer]
 
 /** This transformer maps all sub-transformers*/
 export function superTransformer(
-  checker: ts.TypeChecker
+  checker: ts.TypeChecker,
+  functionDetails: ServerlessConfigFunctions
 ): ts.TransformerFactory<ts.SourceFile> {
   return (context) => {
     const initializedTransformers = transformers.map((transformer) =>
-      transformer(checker)(context)
+      transformer(checker, functionDetails)(context)
     )
 
     return (sourceFile) => {

@@ -3,6 +3,8 @@ import { emitFile, emitServerlessConfig } from './emit'
 import type { AwsFunctionHandler } from 'serverless/aws'
 import { superTransformer } from './transformers'
 
+export type ServerlessConfigFunctions = Map<string, AwsFunctionHandler>
+
 type Options = {
   files: string[] | string
   serverlessConfigPath?: string
@@ -46,8 +48,9 @@ export function transpile({
 
   const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed })
   const checker = program.getTypeChecker()
-  const functionDetails = new Map<string, AwsFunctionHandler>()
-  const globalTransformer = superTransformer(checker)
+  const functionDetails: ServerlessConfigFunctions = new Map()
+
+  const globalTransformer = superTransformer(checker, functionDetails)
 
   program.getSourceFiles().forEach((sourceFile) => {
     if (!sourceFile.isDeclarationFile) {
