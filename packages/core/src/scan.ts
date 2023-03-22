@@ -1,24 +1,24 @@
-import { type Node, sys } from 'typescript'
-import { ANNOTATIONS, AnnotationName } from './annotations'
+import { sys, type Node } from 'typescript'
+import { AnnotationName, ANNOTATIONS } from './annotations'
 
-export const noteRegex = /#(?<name>\w+)\s*(?<args>\((\s*\w+,*\s*\w+\s*)+\))?/d
+export const noteRegex = /\$(?<name>\w+)\s*(?<args>\((\s*\w+,*\s*\w+\s*)+\))?/d
 
 // Try the regex at: https://regexr.com/
-// #Note(     firstParam, secondParam)
+// $Note(     firstParam, secondParam)
 // dolor sit amet Lorem ipsum
-// #Note(firstParam, secondParam, thirdParam)
+// $Note(firstParam, secondParam, thirdParam)
 // dolor sit amet Lorem ipsum
-// #Note(firstParam,secondParam)
-// #Note(firstParam,secondParam)(thirdParam)
-// #Note(firstParam,)
-// #Note(,secondParam)
-// #Note(firstParam)
-// #Note()
-// #Note
-// #Note(
-// #Note(,)
-// #Note)
-// #Note
+// $Note(firstParam,secondParam)
+// $Note(firstParam,secondParam)(thirdParam)
+// $Note(firstParam,)
+// $Note(,secondParam)
+// $Note(firstParam)
+// $Note()
+// $Note
+// $Note(
+// $Note(,)
+// $Note)
+// $Note
 // Lorem ipsum
 // dolor sit amet
 // @borrows 2
@@ -27,13 +27,6 @@ export type Annotation = {
   name: AnnotationName
   args?: string[]
 }
-
-type Match =
-  | (RegExpMatchArray & {
-      groups: { name?: string; args?: string }
-      indices: { groups: { name: [number, number]; args: [number, number] } }
-    })
-  | null
 
 const reportSyntaxError = (
   text: string,
@@ -66,6 +59,13 @@ const reportSyntaxError = (
   process.exit(1)
 }
 
+type Match =
+  | (RegExpMatchArray & {
+      groups?: { name?: string; args?: string }
+      indices: { groups: { name: [number, number]; args: [number, number] } }
+    })
+  | null
+
 export const scanAnnotation = (
   text: string,
   nodeName: string | undefined,
@@ -91,7 +91,7 @@ export const scanAnnotation = (
     )
   }
 
-  // handles plain `#Note` case
+  // handles plain `$Note` case
   const isSimple = !text.includes('(') && !text.includes(')')
 
   // catch args syntax errors

@@ -9,7 +9,7 @@ type Second = {
 }
 
 /**
- * #Fixed
+ * $Fixed
  */
 export async function kol(
   first: First,
@@ -22,7 +22,7 @@ export async function kol(
 }
 
 /**
- * #Ignored
+ * $Ignored
  * ahahahhaha
  */
 export async function foo(
@@ -38,13 +38,13 @@ export async function foo(
 console.log('test')
 
 /**
- * #Ignored
+ * $Ignored
  * ahahahhaha
  */
 const a = console.log('test 2')
 
 /**
- * #Fixed
+ * $Ignored
  */
 export const bar = async (par: string): number => {
   const lambda = new Lambda()

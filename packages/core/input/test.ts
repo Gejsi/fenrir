@@ -1,8 +1,8 @@
-/** #Fixed */
+/** $Fixed */
 server.get('/ping', async () => {
   return 'pong\n'
 })
-/** #Ignored
+/** $Ignored
  * */
 server.listen({ port: 8080 }, (err: any, address: any) => {
   if (err) {
@@ -16,13 +16,13 @@ console.log('testing')
 export const a = () => {}
 
 /**
- * #HttpGet
+ * $HttpGet
  */
 export const b = () => {}
-/** #Fixed */
+/** $Fixed */
 export function bar() {}
 /**
- * #Ignored
+ * $Ignored
  * dolor sit amet
  * Lorem ipsum
  * @returns 1

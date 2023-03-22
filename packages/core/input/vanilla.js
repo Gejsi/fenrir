@@ -1,20 +1,20 @@
-/** #Fixed */
+/** $Fixed */
 export async function count() {
   return 'count'
 }
 
-/** #HttpGet */
+/** $HttpGet */
 export let foo = 1
 
 /**
- * #Fixed
+ * $Fixed
  */
 export const bar = () => {
   return 'bar'
 }
 
 /**
- * #Fixed
+ * $Fixed
  */
 export const lok = function () {
   return 'lok'
