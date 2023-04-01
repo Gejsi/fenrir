@@ -9,7 +9,7 @@ type Second = {
 }
 
 /**
- * $Fixed
+ * $Fixed(name: 2, foo: bar)
  */
 export async function kol(
   first: First,

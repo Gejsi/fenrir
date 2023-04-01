@@ -1,6 +1,4 @@
-type Event = any
-
-export async function greet(event: Event) {
+export async function greet(event: any) {
   return {
     message: 'Hello world!',
     input: event,

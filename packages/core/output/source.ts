@@ -6,7 +6,7 @@ type Second = {
     second: 2;
 };
 /**
- * $Fixed
+ * $Fixed(name: 2, foo: bar)
  */
 export async function kol(event, context, callback): number | string {
     const first: First = JSON.parse(event.first);

@@ -2,6 +2,7 @@ import ts from 'typescript'
 import { emitFile, emitServerlessConfig } from './emit'
 import type { AwsFunctionHandler } from 'serverless/aws'
 import { superTransformer } from './transformers'
+import { reportDiagnostics } from './report'
 
 export type ServerlessConfigFunctions = Map<string, AwsFunctionHandler>
 
@@ -52,19 +53,22 @@ export function transpile({
 
   const globalTransformer = superTransformer(checker, functionDetails)
 
-  program.getSourceFiles().forEach((sourceFile) => {
+  for (const sourceFile of program.getSourceFiles()) {
     if (!sourceFile.isDeclarationFile) {
-      const { transformed: transformedSourceFiles } = ts.transform(sourceFile, [
-        globalTransformer,
-      ])
+      const { transformed: transformedSourceFiles, diagnostics } = ts.transform(
+        sourceFile,
+        [globalTransformer]
+      )
       const transformedSourceFile = transformedSourceFiles[0]
 
       if (transformedSourceFile) {
         const transformedSourceCode = printer.printFile(transformedSourceFile)
         emitFile(outputDirectory, transformedSourceFile, transformedSourceCode)
       }
+
+      if (diagnostics?.length) reportDiagnostics(diagnostics)
     }
-  })
+  }
 
   emitServerlessConfig(serverlessConfigPath, outputDirectory, functionDetails)
 }

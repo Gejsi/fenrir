@@ -38,7 +38,7 @@ export function transformFunction(
       symbol.getName(),
       currentNode
     )
-    if (!parsedAnnotation) return
+    if (!parsedAnnotation || parsedAnnotation.name !== 'Fixed') return
 
     // add function details that will be used for emitting `serverless.yml`
     functionDetails.set(symbol.getName(), {

@@ -1,63 +1,9 @@
-import { sys, type Node } from 'typescript'
-import { AnnotationName, ANNOTATIONS } from './annotations'
+import { type Node } from 'typescript'
+import { type Annotation, ANNOTATIONS } from './annotations'
+import { reportSyntaxError } from './report'
 
-export const noteRegex = /\$(?<name>\w+)\s*(?<args>\((\s*\w+,*\s*\w+\s*)+\))?/d
-
-// Try the regex at: https://regexr.com/
-// $Note(     firstParam, secondParam)
-// dolor sit amet Lorem ipsum
-// $Note(firstParam, secondParam, thirdParam)
-// dolor sit amet Lorem ipsum
-// $Note(firstParam,secondParam)
-// $Note(firstParam,secondParam)(thirdParam)
-// $Note(firstParam,)
-// $Note(,secondParam)
-// $Note(firstParam)
-// $Note()
-// $Note
-// $Note(
-// $Note(,)
-// $Note)
-// $Note
-// Lorem ipsum
-// dolor sit amet
-// @borrows 2
-
-export type Annotation = {
-  name: AnnotationName
-  args?: string[]
-}
-
-const reportSyntaxError = (
-  text: string,
-  emptyCount: number,
-  markerCount: number,
-  errorMessage: string,
-  nodeName: string | undefined,
-  node: Node
-) => {
-  let errorText = text + '\n'
-  errorText += ' '.repeat(emptyCount) + '^'.repeat(markerCount) + '\n'
-  errorText += ' '.repeat(emptyCount) + errorMessage + '\n\n'
-
-  const filePath = sys.resolvePath(node.getSourceFile().fileName)
-  const { line } = node
-    .getSourceFile()
-    .getLineAndCharacterOfPosition(node.getStart())
-
-  if (!nodeName) {
-    errorText += `You have provided an ${errorMessage.toLowerCase()} for a call expression defined here\n ${filePath}:${
-      line + 1
-    }\n`
-  } else {
-    errorText += `You have provided an ${errorMessage.toLowerCase()} for '${nodeName}' defined here\n ${filePath}:${
-      line + 1
-    }\n`
-  }
-
-  console.log(errorText)
-  process.exit(1)
-}
+const noteRegex =
+  /\$(?<name>\w+)\s*(?<args>\((\s*\w+\s*:\s*\w+\s*(,\s*\w+\s*:\s*\w+\s*)*)\))?/d
 
 type Match =
   | (RegExpMatchArray & {
@@ -96,25 +42,29 @@ export const scanAnnotation = (
 
   // catch args syntax errors
   if (!args && !isSimple) {
-    const endPos = match.indices.groups.name[1]
+    const [_, endPos] = match.indices.groups.name
 
     reportSyntaxError(
       text,
       endPos,
       text.length - endPos,
-      'Invalid number of parameters',
+      'Invalid syntax for parameters',
       nodeName,
       node
     )
   }
 
-  const parsedArgs = args
-    ?.substring(1, args.length - 1)
-    .split(',')
-    .map((s) => s.trim())
+  const argsText = args?.replace(/^\s*\(\s*|\s*\)\s*$/g, '') // remove outer parentheses and trim whitespace
+
+  // parse named arguments
+  const namedArgs = argsText?.split(/\s*,\s*/).reduce((acc, cur) => {
+    const [key, value] = cur.split(/\s*:\s*/)
+    if (acc && key && value) acc[key] = value
+    return acc
+  }, {} as Annotation['args'])
 
   return {
-    name: name as AnnotationName,
-    args: parsedArgs,
+    name: name as Annotation['name'],
+    args: namedArgs,
   }
 }
