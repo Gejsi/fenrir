@@ -49,6 +49,7 @@ export function transpile({
 
   const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed })
   const checker = program.getTypeChecker()
+  /** Function details that will be used for emitting `serverless.yml` */
   const functionDetails: ServerlessConfigFunctions = new Map()
 
   const globalTransformer = superTransformer(checker, functionDetails)

@@ -6,7 +6,7 @@ type Second = {
     second: 2;
 };
 /**
- * $Fixed(name: 2, foo: bar)
+ * $Fixed
  */
 export async function kol(event, context, callback): number | string {
     const first: First = JSON.parse(event.first);
@@ -18,4 +18,27 @@ export async function kol(event, context, callback): number | string {
         body: JSON.stringify([1, 2])
     };
 }
+/** $Fixed */
+export async function foo(event, context, callback): number | string {
+    const first: First = JSON.parse(event.first);
+    const half: Record<string, number> = JSON.parse(event.half);
+    const lambda = new Lambda();
+    log('Hello');
+    return {
+        statusCode: 200,
+        body: JSON.stringify([1, 2])
+    };
+}
 console.log('test');
+/**
+ * $Ignored
+ */
+const a = console.log('test 2');
+/**
+ * $Ignored
+ */
+export const bar = async (par: string): number => {
+    const lambda = new Lambda();
+    const a = 2;
+    return;
+};

@@ -1,5 +1,10 @@
 import { type Node } from 'typescript'
-import { type Annotation, ANNOTATIONS } from './annotations'
+import {
+  type Annotation,
+  ALL_ANNOTATIONS,
+  type AnnotationArguments,
+  type AnnotationName,
+} from './annotations'
 import { reportSyntaxError } from './report'
 
 const noteRegex =
@@ -24,7 +29,7 @@ export const scanAnnotation = (
   const { name, args } = match.groups
 
   // catch name syntax errors
-  if (!name || !(name in ANNOTATIONS)) {
+  if (!name || !(name in ALL_ANNOTATIONS)) {
     const [startPos, endPos] = match.indices.groups.name
 
     reportSyntaxError(
@@ -61,10 +66,10 @@ export const scanAnnotation = (
     const [key, value] = cur.split(/\s*:\s*/)
     if (acc && key && value) acc[key] = value
     return acc
-  }, {} as Annotation['args'])
+  }, {} as AnnotationArguments)
 
   return {
-    name: name as Annotation['name'],
+    name: name as AnnotationName,
     args: namedArgs,
   }
 }

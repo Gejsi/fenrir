@@ -62,53 +62,6 @@ const updateFunction = (
   return { parameters: newParameters, block: newBlock }
 }
 
-export const visitAnonymousFunction = (
-  varStatement: ts.VariableStatement,
-  varDeclaration: ts.VariableDeclaration,
-  context: ts.TransformationContext
-): ts.VariableStatement | undefined => {
-  const { parameters, block } = updateFunction(varDeclaration, context)
-  if (
-    varDeclaration.initializer &&
-    (ts.isArrowFunction(varDeclaration.initializer) ||
-      ts.isFunctionExpression(varDeclaration.initializer))
-  ) {
-    const functionNode = varDeclaration.initializer
-    return ts.factory.updateVariableStatement(
-      varStatement,
-      ts.getModifiers(varStatement),
-      ts.factory.updateVariableDeclarationList(varStatement.declarationList, [
-        ts.factory.updateVariableDeclaration(
-          varDeclaration, // node,
-          varDeclaration.name, // name,
-          varDeclaration.exclamationToken, // exclamationToken,
-          varDeclaration.type, // type
-          functionNode.kind === ts.SyntaxKind.ArrowFunction
-            ? ts.factory.updateArrowFunction(
-                functionNode, // node
-                ts.getModifiers(functionNode), // modifiers
-                functionNode.typeParameters, // typeParameters
-                parameters, //parameters
-                functionNode.type, // returnType
-                functionNode.equalsGreaterThanToken, // equalsGreaterThanToken
-                block as ts.ConciseBody // conciseBody
-              )
-            : ts.factory.updateFunctionExpression(
-                functionNode, // node
-                ts.getModifiers(functionNode), // modifiers
-                functionNode.asteriskToken, // asteriskToken
-                functionNode.name, // name
-                functionNode.typeParameters, // typeParameters
-                parameters, // parameters
-                functionNode.type, // returnType
-                block! // block
-              )
-        ),
-      ])
-    )
-  }
-}
-
 export const visitFunction = (
   node: ts.FunctionDeclaration,
   context: ts.TransformationContext
