@@ -5,6 +5,7 @@ import { reportTopLevelWarning } from '../report'
 import { scanAnnotation } from '../scan'
 import type { ServerlessConfigFunctions } from '../transpile'
 import { fixedTransfomer } from './fixed'
+import { httpTransfomer } from './http'
 
 function mainTransfomer(
   node: ts.Node,
@@ -17,7 +18,7 @@ function mainTransfomer(
   if (!isNodeExported(node)) return
 
   // Only consider function-like nodes
-  if (!ts.isFunctionLike(node)) return
+  if (!ts.isFunctionDeclaration(node)) return
 
   const symbol = node.name && checker.getSymbolAtLocation(node.name)
   if (!symbol) return
@@ -41,7 +42,7 @@ function mainTransfomer(
       return
     }
 
-    if (parsedAnnotation.name === 'Fixed')
+    if (parsedAnnotation.name === 'Fixed') {
       res = fixedTransfomer(
         node,
         symbol.getName(),
@@ -49,6 +50,14 @@ function mainTransfomer(
         sourceFile,
         functionDetails
       )
+    } else if (parsedAnnotation.name === 'HttpEvent') {
+      httpTransfomer(
+        symbol.getName(),
+        sourceFile,
+        functionDetails,
+        parsedAnnotation.args
+      )
+    }
   }
 
   return res

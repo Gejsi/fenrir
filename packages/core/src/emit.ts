@@ -5,6 +5,8 @@ import type {
   AwsFunctionHandler,
   Serverless as ServerlessConfig,
 } from 'serverless/aws'
+import { ServerlessConfigFunctions } from './transpile'
+import { parse as parseFileName } from 'path'
 
 export const emitFile = (
   outputDirectory: string,

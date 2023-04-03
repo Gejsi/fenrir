@@ -4,7 +4,7 @@ import { parse as parseFileName } from 'path'
 import { ServerlessConfigFunctions } from '../transpile'
 
 export function fixedTransfomer(
-  node: ts.SignatureDeclaration,
+  node: ts.FunctionDeclaration,
   nodeName: string,
   context: ts.TransformationContext,
   sourceFile: ts.SourceFile,
@@ -14,7 +14,5 @@ export function fixedTransfomer(
     handler: parseFileName(sourceFile.fileName).name + '.' + nodeName,
   })
 
-  // detect if this node is a normal function
-  if (node.kind === ts.SyntaxKind.FunctionDeclaration)
-    return visitFunction(node, context)
+  return visitFunction(node, context)
 }

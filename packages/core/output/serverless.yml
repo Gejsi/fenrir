@@ -19,10 +19,24 @@ functions:
     handler: hello.hi
   hello:
     handler: hello.greet
-  kol:
-    handler: source.kol
-  foo:
-    handler: source.foo
+  createUser:
+    handler: fetch.createUser
+    events:
+      - httpApi:
+          method: POST
+          path: users
+      - httpApi:
+          method: PUT
+          path: update
+      - httpApi:
+          method: DELETE
+          path: delete
+  getUser:
+    handler: fetch.getUser
+    events:
+      - httpApi:
+          method: POST
+          path: users
 plugins:
   - serverless-offline
   - serverless-esbuild
