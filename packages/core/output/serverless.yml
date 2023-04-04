@@ -23,20 +23,23 @@ functions:
     handler: fetch.createUser
     events:
       - httpApi:
-          method: POST
-          path: users
+          method: '"POST"'
+          path: '"/users/create"'
       - httpApi:
-          method: PUT
-          path: update
-      - httpApi:
-          method: DELETE
-          path: delete
+          method: '"PUT"'
+          path: "3"
   getUser:
     handler: fetch.getUser
     events:
       - httpApi:
-          method: POST
-          path: users
+          method: '"GET"'
+          path: '"/users/{id}"'
+      - httpApi:
+          method: '"DELETE"'
+          path: (a, b) => a+b
+      - httpApi:
+          method: '"DELETE"'
+          path: "{ a: { b: 3 } }"
 plugins:
   - serverless-offline
   - serverless-esbuild

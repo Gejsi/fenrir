@@ -7,12 +7,7 @@ export type Annotation = {
   args?: AnnotationArguments
 }
 
-export const TOP_LEVEL_ANNOTATIONS = {
+export const ALL_ANNOTATIONS = {
   Fixed: 'Fixed',
   HttpApi: 'HttpApi',
-} as const
-
-export const ALL_ANNOTATIONS = {
-  ...TOP_LEVEL_ANNOTATIONS,
-  HttpEvent: 'HttpEvent',
 } as const

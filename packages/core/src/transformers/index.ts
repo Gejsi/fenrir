@@ -1,8 +1,6 @@
 import ts from 'typescript'
-import { TOP_LEVEL_ANNOTATIONS } from '../annotations'
 import { isNodeExported } from '../node'
-import { reportTopLevelWarning } from '../report'
-import { scanAnnotation } from '../scan'
+import { parseAnnotation } from '../parse'
 import type { ServerlessConfigFunctions } from '../transpile'
 import { fixedTransfomer } from './fixed'
 import { httpTransfomer } from './http'
@@ -17,7 +15,7 @@ function mainTransfomer(
   // Only consider exported nodes
   if (!isNodeExported(node)) return
 
-  // Only consider function-like nodes
+  // Only consider function declarations nodes
   if (!ts.isFunctionDeclaration(node)) return
 
   const symbol = node.name && checker.getSymbolAtLocation(node.name)
@@ -34,13 +32,8 @@ function mainTransfomer(
     const comment = comments[i]
     if (!comment) continue
 
-    const parsedAnnotation = scanAnnotation(comment, symbol.getName(), node)
+    const parsedAnnotation = parseAnnotation(comment, symbol.getName(), node)
     if (!parsedAnnotation) continue
-
-    if (i === 0 && !(parsedAnnotation.name in TOP_LEVEL_ANNOTATIONS)) {
-      reportTopLevelWarning(sourceFile, node.getStart(), parsedAnnotation.name)
-      return
-    }
 
     if (parsedAnnotation.name === 'Fixed') {
       res = fixedTransfomer(
@@ -50,7 +43,7 @@ function mainTransfomer(
         sourceFile,
         functionDetails
       )
-    } else if (parsedAnnotation.name === 'HttpEvent') {
+    } else if (parsedAnnotation.name === 'HttpApi') {
       httpTransfomer(
         symbol.getName(),
         sourceFile,
