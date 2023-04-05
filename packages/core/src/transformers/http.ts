@@ -7,26 +7,36 @@ export function httpTransfomer(
   nodeName: string,
   sourceFile: ts.SourceFile,
   functionDetails: ServerlessConfigFunctions,
-  annotationArgs: AnnotationArguments | undefined
+  annotationArgs: AnnotationArguments<'HttpApi'> | undefined
 ): void {
-  if (!functionDetails.get(nodeName)) {
+  const details = functionDetails.get(nodeName)
+
+  if (!annotationArgs || !annotationArgs.method || !annotationArgs.path) {
+    // TODO: prettify this diagnostic
+    console.error(
+      `$HttpApi must receive both 'method' and 'path' as parameters.`
+    )
+    process.exit(1)
+  }
+
+  if (!details || !details.events || !details.events.length) {
     functionDetails.set(nodeName, {
       handler: parseFileName(sourceFile.fileName).name + '.' + nodeName,
       events: [
         {
           httpApi: {
-            method: annotationArgs?.method!,
-            path: annotationArgs?.path!,
-          }, // TODO: remove exclamation marks
+            method: annotationArgs.method,
+            path: annotationArgs.path,
+          },
         },
       ],
     })
   } else {
-    functionDetails.get(nodeName)?.events?.push({
+    details.events.push({
       httpApi: {
-        method: annotationArgs?.method!,
-        path: annotationArgs?.path!,
-      }, // TODO: remove also here
+        method: annotationArgs.method,
+        path: annotationArgs.path,
+      },
     })
   }
 }

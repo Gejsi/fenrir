@@ -10,6 +10,7 @@ export function createUser(event: any, context: any) {
 }
 
 /**
+ * $Fixed
  * $HttpApi(method: "GET", path: "/users/{id}")
  * $HttpApi(method: "DELETE", path: (a, b) => a+b)
  * $HttpApi(method: "DELETE", path: { a: { b: 3 } })

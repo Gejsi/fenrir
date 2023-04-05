@@ -1,4 +1,5 @@
 import ts from 'typescript'
+import { annotationNameEquals } from '../annotations'
 import { isNodeExported } from '../node'
 import { parseAnnotation } from '../parse'
 import type { ServerlessConfigFunctions } from '../transpile'
@@ -28,14 +29,11 @@ function mainTransfomer(
 
   let res: ts.Node | undefined
 
-  for (let i = 0; i < comments.length; i++) {
-    const comment = comments[i]
-    if (!comment) continue
-
+  for (const comment of comments) {
     const parsedAnnotation = parseAnnotation(comment, symbol.getName(), node)
     if (!parsedAnnotation) continue
 
-    if (parsedAnnotation.name === 'Fixed') {
+    if (annotationNameEquals(parsedAnnotation, 'Fixed')) {
       res = fixedTransfomer(
         node,
         symbol.getName(),
@@ -43,7 +41,7 @@ function mainTransfomer(
         sourceFile,
         functionDetails
       )
-    } else if (parsedAnnotation.name === 'HttpApi') {
+    } else if (annotationNameEquals(parsedAnnotation, 'HttpApi')) {
       httpTransfomer(
         symbol.getName(),
         sourceFile,

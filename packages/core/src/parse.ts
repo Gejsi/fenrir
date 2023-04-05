@@ -1,7 +1,7 @@
 import ts from 'typescript'
 import {
   type Annotation,
-  ALL_ANNOTATIONS,
+  ANNOTATIONS,
   type AnnotationArguments,
   type AnnotationName,
 } from './annotations'
@@ -26,11 +26,11 @@ type Match =
     })
   | null
 
-export const parseAnnotation = (
+export function parseAnnotation(
   text: string,
   nodeName: string | undefined,
   node: ts.Node
-): Annotation | undefined => {
+): Annotation | undefined {
   const match = text.match(noteRegex) as Match
 
   if (!match || !match.groups) return
@@ -38,17 +38,18 @@ export const parseAnnotation = (
   const { name, args } = match.groups
 
   // catch name syntax errors
-  if (!name || !(name in ALL_ANNOTATIONS)) {
+  if (!name || !(name in ANNOTATIONS)) {
     const [startPos, endPos] = match.indices.groups.name
 
-    reportSyntaxError(
-      text,
-      startPos,
-      endPos - startPos,
-      'Unknown annotation name',
-      nodeName,
-      node
-    )
+    nodeName &&
+      reportSyntaxError(
+        text,
+        startPos,
+        endPos - startPos,
+        'Unknown annotation name',
+        nodeName,
+        node
+      )
   }
 
   // handles plain `$Note` case
@@ -58,14 +59,15 @@ export const parseAnnotation = (
   if (!args && !isSimple) {
     const [_, endPos] = match.indices.groups.name
 
-    reportSyntaxError(
-      text,
-      endPos,
-      text.length - endPos,
-      'Invalid number for parameters (cannot be empty)',
-      nodeName,
-      node
-    )
+    nodeName &&
+      reportSyntaxError(
+        text,
+        endPos,
+        text.length - endPos,
+        'Invalid syntax for parameters',
+        nodeName,
+        node
+      )
   }
 
   // remove outer parentheses and trim whitespace
@@ -77,9 +79,9 @@ export const parseAnnotation = (
   }
 }
 
-function parseArguments(
+function parseArguments<T extends AnnotationName>(
   argsString: string | undefined
-): AnnotationArguments | undefined {
+): AnnotationArguments<T> | undefined {
   if (!argsString) return
 
   const sourceFile = ts.createSourceFile(
@@ -87,14 +89,15 @@ function parseArguments(
     `const args = { ${argsString} }`,
     ts.ScriptTarget.Latest
   )
-  const args: AnnotationArguments = {}
+
+  const args = {} as AnnotationArguments<T>
 
   const { properties } = (sourceFile.statements[0] as ts.VariableStatement)
     .declarationList.declarations[0]?.initializer as ts.ObjectLiteralExpression
 
   for (const prop of properties) {
     if (ts.isPropertyAssignment(prop)) {
-      const key = prop.name.getText(sourceFile)
+      const key = prop.name.getText(sourceFile) as keyof AnnotationArguments<T>
       const value = prop.initializer.getText(sourceFile)
       args[key] = value
     }
