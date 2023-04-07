@@ -11,8 +11,6 @@ export function createUser(event: any, context: any) {
 /**
  * $Fixed
  * $HttpApi(method: "GET", path: "/users/{id}")
- * $HttpApi(method: "DELETE", path: (a, b) => a+b)
- * $HttpApi(method: "DELETE", path: { a: { b: 3 } })
  */
 export function getUser(event, context, callback) {
     const event: any = JSON.parse(event.event);
@@ -24,4 +22,13 @@ export function getUser(event, context, callback) {
             context
         })
     };
+}
+/**
+ * $Scheduled(rate: "cron(0 12 * * ? *)")
+ * $Scheduled(rate: "cron(0 12 * * ? *)")
+ */
+export async function processOrder(order) {
+    const orderData = order;
+    await processOrderData(orderData);
+    return { message: 'Order processed successfully' };
 }

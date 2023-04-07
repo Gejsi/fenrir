@@ -22,6 +22,11 @@ functions:
     handler: hello.hi
   hello:
     handler: hello.greet
+  process:
+    handler: dude
+    events:
+      - schedule:
+          rate: 'cron(0 12 * * ? *)'
 
 plugins:
   - serverless-offline

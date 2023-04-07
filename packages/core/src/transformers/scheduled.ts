@@ -3,17 +3,15 @@ import { parse as parseFileName } from 'path'
 import { ServerlessConfigFunctions } from '../transpile'
 import type { AnnotationArguments } from '../annotations'
 
-export function httpTransfomer(
+export function scheduledTransfomer(
   nodeName: string,
   sourceFile: ts.SourceFile,
   functionDetails: ServerlessConfigFunctions,
-  annotationArgs: AnnotationArguments<'HttpApi'> | undefined
+  annotationArgs: AnnotationArguments<'Scheduled'> | undefined
 ): void {
-  if (!annotationArgs || !annotationArgs.method || !annotationArgs.path) {
-    // TODO: prettify this diagnostic
-    console.error(
-      `$HttpApi must receive both 'method' and 'path' as parameters.`
-    )
+  if (!annotationArgs || !annotationArgs.rate) {
+    // TODO: prettify this diagnostic with line diagnostics
+    console.error(`$Scheduled must receive the 'rate' parameter.`)
     process.exit(1)
   }
 
@@ -24,18 +22,16 @@ export function httpTransfomer(
       handler: parseFileName(sourceFile.fileName).name + '.' + nodeName,
       events: [
         {
-          httpApi: {
-            method: annotationArgs.method,
-            path: annotationArgs.path,
+          schedule: {
+            rate: annotationArgs.rate,
           },
         },
       ],
     })
   } else {
     details.events.push({
-      httpApi: {
-        method: annotationArgs.method,
-        path: annotationArgs.path,
+      schedule: {
+        rate: annotationArgs.rate,
       },
     })
   }

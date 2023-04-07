@@ -5,6 +5,7 @@ import { parseAnnotation } from '../parse'
 import type { ServerlessConfigFunctions } from '../transpile'
 import { fixedTransfomer } from './fixed'
 import { httpTransfomer } from './http'
+import { scheduledTransfomer } from './scheduled'
 
 function mainTransfomer(
   node: ts.Node,
@@ -43,6 +44,13 @@ function mainTransfomer(
       )
     } else if (annotationNameEquals(parsedAnnotation, 'HttpApi')) {
       httpTransfomer(
+        symbol.getName(),
+        sourceFile,
+        functionDetails,
+        parsedAnnotation.args
+      )
+    } else if (annotationNameEquals(parsedAnnotation, 'Scheduled')) {
+      scheduledTransfomer(
         symbol.getName(),
         sourceFile,
         functionDetails,

@@ -12,12 +12,21 @@ export function createUser(event: any, context: any) {
 /**
  * $Fixed
  * $HttpApi(method: "GET", path: "/users/{id}")
- * $HttpApi(method: "DELETE", path: (a, b) => a+b)
- * $HttpApi(method: "DELETE", path: { a: { b: 3 } })
  */
 export function getUser(event: any, context: any) {
   return {
     event,
     context,
   }
+}
+
+/**
+ * $Scheduled(rate: "cron(0 12 * * ? *)")
+ */
+export async function processOrder(order) {
+  const orderData = order
+
+  await processOrderData(orderData)
+
+  return { message: 'Order processed successfully' }
 }

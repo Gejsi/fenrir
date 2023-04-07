@@ -63,6 +63,7 @@ export function transpile({
       const transformedSourceFile = transformedSourceFiles[0]
 
       if (transformedSourceFile) {
+        // TODO: prettify output code
         const transformedSourceCode = printer.printFile(transformedSourceFile)
         emitFile(outputDirectory, transformedSourceFile, transformedSourceCode)
       }
