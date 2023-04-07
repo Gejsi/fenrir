@@ -23,12 +23,23 @@ export function getUser(event, context, callback) {
         })
     };
 }
+// * $Scheduled(
+// *   rate: 'cron(0 12 * * ? *)',
+// *   enabled: false,
+// *   inputTransfomer: {
+// *     inputPathsMap: { eventTime: '$.time' },
+// *     inputTemplate: '{"time": <eventTime>, "key1": "value1"}'
+// *   })
 /**
- * $Scheduled(rate: "cron(0 12 * * ? *)")
- * $Scheduled(rate: "cron(0 12 * * ? *)")
+ * $Fixed
+ * $Scheduled(rate: 'cron(0 12 * * ? *)', enabled: false, inputTransfomer: { inputPathsMap: { eventTime: '$.time' }, inputTemplate: '{"time": <eventTime>, "key1": "value1"}' })
  */
-export async function processOrder(order) {
+export async function processOrder(event, context, callback) {
+    const order = JSON.parse(event.order);
     const orderData = order;
     await processOrderData(orderData);
-    return { message: 'Order processed successfully' };
+    return {
+        statusCode: 200,
+        body: JSON.stringify({ message: 'Order processed successfully' })
+    };
 }

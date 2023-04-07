@@ -23,7 +23,7 @@ export function scheduledTransfomer(
       events: [
         {
           schedule: {
-            rate: annotationArgs.rate,
+            ...annotationArgs,
           },
         },
       ],
@@ -31,7 +31,7 @@ export function scheduledTransfomer(
   } else {
     details.events.push({
       schedule: {
-        rate: annotationArgs.rate,
+        ...annotationArgs,
       },
     })
   }

@@ -98,10 +98,39 @@ function parseArguments<T extends AnnotationName>(
   for (const prop of properties) {
     if (ts.isPropertyAssignment(prop)) {
       const key = prop.name.getText(sourceFile) as keyof AnnotationArguments<T>
-      const value = prop.initializer.getText(sourceFile)
+      const value = parseValue(prop.initializer, sourceFile)
       args[key] = value
     }
   }
 
   return args
+}
+
+function parseValue(expr: ts.Expression, sourceFile: ts.SourceFile): any {
+  let value: any
+
+  if (ts.isStringLiteral(expr)) {
+    value = expr.text
+  } else if (ts.isNumericLiteral(expr)) {
+    value = Number(expr.text)
+  } else if (expr.kind === ts.SyntaxKind.TrueKeyword) {
+    value = true
+  } else if (expr.kind === ts.SyntaxKind.FalseKeyword) {
+    value = false
+  } else if (ts.isObjectLiteralExpression(expr)) {
+    const tempObj: Record<string, any> = {}
+    for (const prop of (expr as ts.ObjectLiteralExpression).properties) {
+      if (ts.isPropertyAssignment(prop)) {
+        const key = prop.name.getText(sourceFile)
+        tempObj[key] = parseValue(prop.initializer, sourceFile)
+      }
+    }
+
+    value = tempObj
+  } else {
+    // If the initializer has an unsupported type, just store its text
+    value = expr.getText(sourceFile)
+  }
+
+  return value
 }

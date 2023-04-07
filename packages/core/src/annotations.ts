@@ -5,7 +5,7 @@ export type AnnotationName = keyof typeof ANNOTATIONS
 
 export type AnnotationArguments<T extends AnnotationName> = Record<
   keyof (typeof ANNOTATIONS)[T],
-  string
+  any
 >
 
 export type Annotation<T extends AnnotationName = AnnotationName> = {

@@ -25,8 +25,7 @@ export function httpTransfomer(
       events: [
         {
           httpApi: {
-            method: annotationArgs.method,
-            path: annotationArgs.path,
+            ...annotationArgs,
           },
         },
       ],
@@ -34,8 +33,7 @@ export function httpTransfomer(
   } else {
     details.events.push({
       httpApi: {
-        method: annotationArgs.method,
-        path: annotationArgs.path,
+        ...annotationArgs,
       },
     })
   }

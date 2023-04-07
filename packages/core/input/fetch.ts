@@ -20,8 +20,17 @@ export function getUser(event: any, context: any) {
   }
 }
 
+// * $Scheduled(
+// *   rate: 'cron(0 12 * * ? *)',
+// *   enabled: false,
+// *   inputTransfomer: {
+// *     inputPathsMap: { eventTime: '$.time' },
+// *     inputTemplate: '{"time": <eventTime>, "key1": "value1"}'
+// *   })
+
 /**
- * $Scheduled(rate: "cron(0 12 * * ? *)")
+ * $Fixed
+ * $Scheduled(rate: 'cron(0 12 * * ? *)', enabled: false, inputTransfomer: { inputPathsMap: { eventTime: '$.time' }, inputTemplate: '{"time": <eventTime>, "key1": "value1"}' })
  */
 export async function processOrder(order) {
   const orderData = order

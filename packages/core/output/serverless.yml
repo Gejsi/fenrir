@@ -1,7 +1,7 @@
 org: gejsi
 app: funx
 service: funx
-frameworkVersion: '3'
+frameworkVersion: "3"
 provider:
   name: aws
   runtime: nodejs14.x
@@ -13,37 +13,37 @@ provider:
       Action:
         - lambda:InvokeFunction
         - lambda:InvokeAsync
-      Resource: '*'
+      Resource: "*"
 functions:
   hi:
     handler: hello.hi
   hello:
     handler: hello.greet
-  process:
-    handler: dude
-    events:
-      - schedule:
-          rate: cron(0 12 * * ? *)
   createUser:
     handler: fetch.createUser
     events:
       - httpApi:
-          method: '"POST"'
-          path: '"/users/create"'
+          method: POST
+          path: /users/create
       - httpApi:
-          method: '"PUT"'
-          path: '3'
+          method: PUT
+          path: 3
   getUser:
     handler: fetch.getUser
     events:
       - httpApi:
-          method: '"GET"'
-          path: '"/users/{id}"'
+          method: GET
+          path: /users/{id}
   processOrder:
     handler: fetch.processOrder
     events:
       - schedule:
-          rate: '"cron(0 12 * * ? *)"'
+          rate: cron(0 12 * * ? *)
+          enabled: false
+          inputTransfomer:
+            inputPathsMap:
+              eventTime: $.time
+            inputTemplate: '{"time": <eventTime>, "key1": "value1"}'
 plugins:
   - serverless-offline
   - serverless-esbuild
