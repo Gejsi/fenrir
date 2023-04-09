@@ -13,7 +13,7 @@ function mainTransfomer(
   context: ts.TransformationContext,
   sourceFile: ts.SourceFile,
   functionDetails: ServerlessConfigFunctions
-): ts.Node | undefined {
+): ts.FunctionDeclaration | undefined {
   // Only consider exported nodes
   if (!isNodeExported(node)) return
 
@@ -28,7 +28,7 @@ function mainTransfomer(
     .split(/\n(?!\s)/)
     .filter((c) => c.startsWith('$'))
 
-  let res: ts.Node | undefined
+  let res: ts.FunctionDeclaration | undefined
 
   for (const comment of comments) {
     const parsedAnnotation = parseAnnotation(comment, symbol.getName(), node)
@@ -44,6 +44,7 @@ function mainTransfomer(
       )
     } else if (annotationNameEquals(parsedAnnotation, 'HttpApi')) {
       httpTransfomer(
+        node,
         symbol.getName(),
         sourceFile,
         functionDetails,
@@ -51,6 +52,7 @@ function mainTransfomer(
       )
     } else if (annotationNameEquals(parsedAnnotation, 'Scheduled')) {
       scheduledTransfomer(
+        node,
         symbol.getName(),
         sourceFile,
         functionDetails,

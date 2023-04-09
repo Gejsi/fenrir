@@ -2,19 +2,21 @@ import ts from 'typescript'
 import { parse as parseFileName } from 'path'
 import { ServerlessConfigFunctions } from '../transpile'
 import type { AnnotationArguments } from '../annotations'
+import { reportErrorAt } from '../report'
 
 export function httpTransfomer(
+  node: ts.FunctionDeclaration,
   nodeName: string,
   sourceFile: ts.SourceFile,
   functionDetails: ServerlessConfigFunctions,
   annotationArgs: AnnotationArguments<'HttpApi'> | undefined
 ): void {
   if (!annotationArgs || !annotationArgs.method || !annotationArgs.path) {
-    // TODO: prettify this diagnostic
-    console.error(
-      `$HttpApi must receive both 'method' and 'path' as parameters.`
+    return reportErrorAt(
+      "$HttpApi must receive both 'method' and 'path' as parameters",
+      nodeName,
+      node
     )
-    process.exit(1)
   }
 
   const details = functionDetails.get(nodeName)

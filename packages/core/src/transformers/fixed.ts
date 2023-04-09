@@ -9,7 +9,7 @@ export function fixedTransfomer(
   context: ts.TransformationContext,
   sourceFile: ts.SourceFile,
   functionDetails: ServerlessConfigFunctions
-): ts.Node | undefined {
+): ts.FunctionDeclaration | undefined {
   functionDetails.set(nodeName, {
     handler: parseFileName(sourceFile.fileName).name + '.' + nodeName,
   })

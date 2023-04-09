@@ -29,7 +29,7 @@ type Match =
 export function parseAnnotation(
   text: string,
   nodeName: string | undefined,
-  node: ts.Node
+  node: ts.FunctionDeclaration
 ): Annotation | undefined {
   const match = text.match(noteRegex) as Match
 
@@ -64,7 +64,7 @@ export function parseAnnotation(
         text,
         endPos,
         text.length - endPos,
-        'Invalid syntax for parameters',
+        'Invalid syntax for annotation parameters',
         nodeName,
         node
       )
