@@ -32,7 +32,7 @@ functions:
     handler: fetch.getUser
     events:
       - schedule:
-          rate: cron(0 12 * * ? *)
+          rate: cron(0 8 * * ? *)
           enabled:
             - Three
             - 2
@@ -52,9 +52,10 @@ functions:
             - 2
             - Three
           inputTransfomer:
-            inputPathsMap:
+            inputPathap:
               eventTime: $.time
             inputTemplate: '{"time": <eventTime>, "key1": "value1"}'
+          dude: () => a + b
 plugins:
   - serverless-offline
   - serverless-esbuild

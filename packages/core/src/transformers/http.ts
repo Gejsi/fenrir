@@ -13,7 +13,7 @@ export function httpTransfomer(
 ): void {
   if (!annotationArgs || !annotationArgs.method || !annotationArgs.path) {
     return reportErrorAt(
-      "$HttpApi must receive both 'method' and 'path' as parameters",
+      "'$HttpApi' must receive both 'method' and 'path' as parameters",
       nodeName,
       node
     )

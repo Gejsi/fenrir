@@ -5,7 +5,7 @@ import {
   type AnnotationArguments,
   type AnnotationName,
 } from './annotations'
-import { reportSyntaxError } from './report'
+import { reportErrorAt, reportSyntaxError } from './report'
 
 /**
  * This regex uses a non-capturing group (?:...) and the | operator to match either a sequence
@@ -75,12 +75,15 @@ export function parseAnnotation(
 
   return {
     name: name as AnnotationName,
-    args: parseArguments(argsText),
+    args: parseArguments(name as AnnotationName, argsText, nodeName, node),
   }
 }
 
 function parseArguments<T extends AnnotationName>(
-  argsString: string | undefined
+  annotationName: AnnotationName,
+  argsString: string | undefined,
+  nodeName: string | undefined,
+  node: ts.FunctionDeclaration
 ): AnnotationArguments<T> | undefined {
   if (!argsString) return
 
@@ -89,6 +92,17 @@ function parseArguments<T extends AnnotationName>(
     `const args = { ${argsString} }`,
     ts.ScriptTarget.Latest
   )
+
+  // catch args syntax errors by evaluating the source code
+  try {
+    eval(sourceFile.getText())
+  } catch (e) {
+    return reportErrorAt(
+      `Check parameters syntax for '$${annotationName}'`,
+      nodeName!,
+      node
+    )
+  }
 
   const args = {} as AnnotationArguments<T>
 
@@ -121,7 +135,8 @@ function parseValue(expr: ts.Expression, sourceFile: ts.SourceFile): any {
     value = expr.elements.map((element) => parseValue(element, sourceFile))
   } else if (ts.isObjectLiteralExpression(expr)) {
     const tempValue: Record<string, any> = {}
-    for (const prop of (expr as ts.ObjectLiteralExpression).properties) {
+
+    for (const prop of expr.properties) {
       if (ts.isPropertyAssignment(prop)) {
         const key = prop.name.getText(sourceFile)
         tempValue[key] = parseValue(prop.initializer, sourceFile)
@@ -132,7 +147,6 @@ function parseValue(expr: ts.Expression, sourceFile: ts.SourceFile): any {
   } else {
     // If the initializer has an unsupported type, just store its text
     value = expr.getText(sourceFile)
-    console.warn('Unsupported type of initializer at...') // TODO: prettify log
   }
 
   return value

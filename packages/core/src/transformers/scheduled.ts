@@ -13,7 +13,7 @@ export function scheduledTransfomer(
 ): void {
   if (!annotationArgs || !annotationArgs.rate) {
     return reportErrorAt(
-      "$Scheduled must receive the 'rate' parameter",
+      "'$Scheduled' must receive the 'rate' parameter",
       nodeName,
       node
     )

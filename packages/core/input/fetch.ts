@@ -13,7 +13,7 @@ export function createUser(event: any, context: any) {
  * Nice
  * $Fixed
  * Foo
- * $Scheduled(rate: 'cron(0 12 * * ? *)', enabled: ['Three', 2, 'First'], inputTransfomer: { inputPathsMap: { eventTime: '$.time' }, inputTemplate: '{"time": <eventTime>, "key1": "value1"}' })
+ * $Scheduled(rate: 'cron(0 8 * * ? *)', enabled: ['Three', 2, 'First'], inputTransfomer: { inputPathsMap: { eventTime: '$.time' }, inputTemplate: '{"time": <eventTime>, "key1": "value1"}' })
  */
 export function getUser(event: any, context: any) {
   return {
@@ -29,9 +29,10 @@ export function getUser(event: any, context: any) {
  *   enabled: false,
  *   foo: ['One', 2, 'Three'],
  *   inputTransfomer: {
- *     inputPathsMap: { eventTime: '$.time' },
+ *     inputPathap: { eventTime: '$.time' },
  *     inputTemplate: '{"time": <eventTime>, "key1": "value1"}'
  *   },
+ *   dude: () => a + b
  *  )
  *  @returns
  */
