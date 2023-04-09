@@ -117,19 +117,22 @@ function parseValue(expr: ts.Expression, sourceFile: ts.SourceFile): any {
     value = true
   } else if (expr.kind === ts.SyntaxKind.FalseKeyword) {
     value = false
+  } else if (ts.isArrayLiteralExpression(expr)) {
+    value = expr.elements.map((element) => parseValue(element, sourceFile))
   } else if (ts.isObjectLiteralExpression(expr)) {
-    const tempObj: Record<string, any> = {}
+    const tempValue: Record<string, any> = {}
     for (const prop of (expr as ts.ObjectLiteralExpression).properties) {
       if (ts.isPropertyAssignment(prop)) {
         const key = prop.name.getText(sourceFile)
-        tempObj[key] = parseValue(prop.initializer, sourceFile)
+        tempValue[key] = parseValue(prop.initializer, sourceFile)
       }
     }
 
-    value = tempObj
+    value = tempValue
   } else {
     // If the initializer has an unsupported type, just store its text
     value = expr.getText(sourceFile)
+    console.warn('Unsupported type of initializer at...') // TODO: prettify log
   }
 
   return value

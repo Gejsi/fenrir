@@ -10,8 +10,10 @@ export function createUser(event: any, context: any) {
 }
 
 /**
+ * Nice
  * $Fixed
- * $HttpApi(method: "GET", path: "/users/{id}")
+ * Foo
+ * $Scheduled(rate: 'cron(0 12 * * ? *)', enabled: ['Three', 2, 'First'], inputTransfomer: { inputPathsMap: { eventTime: '$.time' }, inputTemplate: '{"time": <eventTime>, "key1": "value1"}' })
  */
 export function getUser(event: any, context: any) {
   return {
@@ -20,17 +22,18 @@ export function getUser(event: any, context: any) {
   }
 }
 
-// * $Scheduled(
-// *   rate: 'cron(0 12 * * ? *)',
-// *   enabled: false,
-// *   inputTransfomer: {
-// *     inputPathsMap: { eventTime: '$.time' },
-// *     inputTemplate: '{"time": <eventTime>, "key1": "value1"}'
-// *   })
-
 /**
  * $Fixed
- * $Scheduled(rate: 'cron(0 12 * * ? *)', enabled: false, inputTransfomer: { inputPathsMap: { eventTime: '$.time' }, inputTemplate: '{"time": <eventTime>, "key1": "value1"}' })
+ * $Scheduled(
+ *   rate: 'cron(0 11 * * ? *)',
+ *   enabled: false,
+ *   foo: ['One', 2, 'Three'],
+ *   inputTransfomer: {
+ *     inputPathsMap: { eventTime: '$.time' },
+ *     inputTemplate: '{"time": <eventTime>, "key1": "value1"}'
+ *   },
+ *  )
+ *  @returns
  */
 export async function processOrder(order) {
   const orderData = order

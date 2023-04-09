@@ -25,7 +25,7 @@ function mainTransfomer(
 
   const comments = ts
     .displayPartsToString(symbol.getDocumentationComment(checker))
-    .split('\n')
+    .split(/\n(?!\s)/)
     .filter((c) => c.startsWith('$'))
 
   let res: ts.Node | undefined
