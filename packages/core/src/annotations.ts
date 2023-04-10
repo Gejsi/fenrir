@@ -1,16 +1,23 @@
-// TODO: use these types
-// import type {Schedule} from 'serverless/aws'
+import type { Schedule, HttpApiEvent, AwsFunctionHandler } from 'serverless/aws'
 
 export type AnnotationName = keyof typeof ANNOTATIONS
 
-export type AnnotationArguments<T extends AnnotationName> = Record<
-  keyof (typeof ANNOTATIONS)[T],
-  any
->
+export type AnnotationArguments<T extends AnnotationName> =
+  (typeof ANNOTATIONS)[T]
 
 export type Annotation<T extends AnnotationName = AnnotationName> = {
-  name: AnnotationName
+  name: T
   args?: AnnotationArguments<T>
+}
+
+export const ANNOTATIONS: {
+  Fixed: AwsFunctionHandler
+  HttpApi: HttpApiEvent
+  Scheduled: Schedule
+} = {
+  Fixed: { handler: '' },
+  HttpApi: { method: '', path: '' },
+  Scheduled: { rate: '' },
 }
 
 export function annotationNameEquals<T extends AnnotationName>(
@@ -19,10 +26,3 @@ export function annotationNameEquals<T extends AnnotationName>(
 ): annotation is Annotation<T> {
   return annotation.name === annotationName
 }
-
-// TODO: use default params
-export const ANNOTATIONS = {
-  Fixed: { memory: 1024, timeout: 6 },
-  HttpApi: { method: undefined, path: undefined },
-  Scheduled: { rate: undefined },
-} as const

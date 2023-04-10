@@ -89,7 +89,7 @@ function parseArguments<T extends AnnotationName>(
 
   const sourceFile = ts.createSourceFile(
     '',
-    `const args = { ${argsString} }`,
+    `const temp = { ${argsString} }`,
     ts.ScriptTarget.Latest
   )
 

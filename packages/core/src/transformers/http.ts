@@ -6,11 +6,12 @@ import { reportErrorAt } from '../report'
 
 export function httpTransfomer(
   node: ts.FunctionDeclaration,
-  nodeName: string,
-  sourceFile: ts.SourceFile,
   functionDetails: ServerlessConfigFunctions,
   annotationArgs: AnnotationArguments<'HttpApi'> | undefined
 ): void {
+  const nodeName = node.name?.getText()
+  if (!nodeName) return
+
   if (!annotationArgs || !annotationArgs.method || !annotationArgs.path) {
     return reportErrorAt(
       "'$HttpApi' must receive both 'method' and 'path' as parameters",
@@ -21,19 +22,20 @@ export function httpTransfomer(
 
   const details = functionDetails.get(nodeName)
 
-  if (!details || !details.events || !details.events.length) {
+  if (!details || !details.handler) {
     functionDetails.set(nodeName, {
-      handler: parseFileName(sourceFile.fileName).name + '.' + nodeName,
-      events: [
-        {
-          httpApi: {
-            ...annotationArgs,
-          },
-        },
-      ],
+      handler:
+        parseFileName(node.getSourceFile().fileName).name + '.' + nodeName,
+      events: [{ httpApi: annotationArgs }],
     })
+
+    return
+  }
+
+  if (!details.events || !details.events.length) {
+    details.events = [{ httpApi: annotationArgs }]
   } else {
-    details.events.push({
+    details.events?.push({
       httpApi: {
         ...annotationArgs,
       },

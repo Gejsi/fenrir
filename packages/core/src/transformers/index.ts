@@ -11,7 +11,6 @@ function mainTransfomer(
   node: ts.Node,
   checker: ts.TypeChecker,
   context: ts.TransformationContext,
-  sourceFile: ts.SourceFile,
   functionDetails: ServerlessConfigFunctions
 ): ts.FunctionDeclaration | undefined {
   // Only consider exported nodes
@@ -37,27 +36,14 @@ function mainTransfomer(
     if (annotationNameEquals(parsedAnnotation, 'Fixed')) {
       res = fixedTransfomer(
         node,
-        symbol.getName(),
         context,
-        sourceFile,
-        functionDetails
+        functionDetails,
+        parsedAnnotation.args
       )
     } else if (annotationNameEquals(parsedAnnotation, 'HttpApi')) {
-      httpTransfomer(
-        node,
-        symbol.getName(),
-        sourceFile,
-        functionDetails,
-        parsedAnnotation.args
-      )
+      httpTransfomer(node, functionDetails, parsedAnnotation.args)
     } else if (annotationNameEquals(parsedAnnotation, 'Scheduled')) {
-      scheduledTransfomer(
-        node,
-        symbol.getName(),
-        sourceFile,
-        functionDetails,
-        parsedAnnotation.args
-      )
+      scheduledTransfomer(node, functionDetails, parsedAnnotation.args)
     }
   }
 
@@ -71,13 +57,7 @@ export function superTransformer(
 ): ts.TransformerFactory<ts.SourceFile> {
   return (context) => (sourceFile) => {
     const visitor: ts.Visitor = (node) => {
-      const res = mainTransfomer(
-        node,
-        checker,
-        context,
-        sourceFile,
-        functionDetails
-      )
+      const res = mainTransfomer(node, checker, context, functionDetails)
 
       // if the function transformation was successful, return the new node...
       if (res) return res

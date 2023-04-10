@@ -1,17 +1,19 @@
 /**
+ * $Fixed(timeout: 10)
  * $HttpApi(method: "POST", path: "/users/create")
  * $HttpApi(method: "PUT", path: 3)
  */
-export function createUser(event: any, context: any) {
+export function createUser(event, context, callback) {
+    const first: any = JSON.parse(event.first);
     return {
-        event,
-        context
+        statusCode: 200,
+        body: JSON.stringify(1)
     };
 }
 /**
  * Nice
- * $Fixed
  * Foo
+ * $Fixed(memorySize: 2048)
  * $Scheduled(rate: 'cron(0 8 * * ? *)', enabled: ['Three', 2, 'First'], inputTransfomer: { inputPathsMap: { eventTime: '$.time' }, inputTemplate: '{"time": <eventTime>, "key1": "value1"}' })
  */
 export function getUser(event, context, callback) {
@@ -26,7 +28,8 @@ export function getUser(event, context, callback) {
     };
 }
 /**
- * $Fixed
+ * $Fixed(timeout: 10)
+ * $HttpApi(method: "PUT", path: 3)
  * $Scheduled(
  *   rate: 'cron(0 11 * * ? *)',
  *   enabled: false,

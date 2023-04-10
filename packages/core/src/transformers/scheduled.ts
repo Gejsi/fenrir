@@ -6,11 +6,12 @@ import { reportErrorAt } from '../report'
 
 export function scheduledTransfomer(
   node: ts.FunctionDeclaration,
-  nodeName: string,
-  sourceFile: ts.SourceFile,
   functionDetails: ServerlessConfigFunctions,
   annotationArgs: AnnotationArguments<'Scheduled'> | undefined
 ): void {
+  const nodeName = node.name?.getText()
+  if (!nodeName) return
+
   if (!annotationArgs || !annotationArgs.rate) {
     return reportErrorAt(
       "'$Scheduled' must receive the 'rate' parameter",
@@ -21,19 +22,20 @@ export function scheduledTransfomer(
 
   const details = functionDetails.get(nodeName)
 
-  if (!details || !details.events || !details.events.length) {
+  if (!details || !details.handler) {
     functionDetails.set(nodeName, {
-      handler: parseFileName(sourceFile.fileName).name + '.' + nodeName,
-      events: [
-        {
-          schedule: {
-            ...annotationArgs,
-          },
-        },
-      ],
+      handler:
+        parseFileName(node.getSourceFile().fileName).name + '.' + nodeName,
+      events: [{ schedule: annotationArgs }],
     })
+
+    return
+  }
+
+  if (!details.events || !details.events.length) {
+    details.events = [{ schedule: annotationArgs }]
   } else {
-    details.events.push({
+    details.events?.push({
       schedule: {
         ...annotationArgs,
       },
