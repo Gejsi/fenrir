@@ -1,4 +1,5 @@
 import type { Schedule, HttpApiEvent, AwsFunctionHandler } from 'serverless/aws'
+import type { Expression } from 'typescript'
 
 export type AnnotationName = keyof typeof ANNOTATIONS
 
@@ -12,7 +13,7 @@ export type Annotation<T extends AnnotationName = AnnotationName> = {
 
 export const ANNOTATIONS: {
   Fixed: AwsFunctionHandler
-  TrackMetrics: { namespace: string; metricName: string }
+  TrackMetrics: { namespace: string; metricName: string | Expression }
   HttpApi: HttpApiEvent
   Scheduled: Schedule
 } = {

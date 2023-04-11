@@ -1,6 +1,10 @@
 /**
- * $TrackMetrics(namespace: "MyNamespace", metricName: "MyMetric")
+ * $TrackMetrics(namespace: "fio", metricName: event)
  */
 export async function foo(event: any, context: any) {
-  return 2
+  const b = 1
+  const bar = function () {
+    const c = a + b
+  }
+  return bar()
 }

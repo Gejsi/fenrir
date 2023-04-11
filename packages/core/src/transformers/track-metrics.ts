@@ -104,10 +104,12 @@ function updateFunction(
                         ts.factory.createObjectLiteralExpression(
                           [
                             ts.factory.createPropertyAssignment(
-                              'MetricName',
-                              ts.factory.createStringLiteral(
-                                annotation.args!.metricName
-                              )
+                              'MetricName', // FIX: this should be mapped to "Value" and also corrected in the types
+                              annotation.args!.metricName.kind !== undefined
+                                ? annotation.args?.metricName
+                                : ts.factory.createStringLiteral(
+                                    annotation.args?.metricName
+                                  )
                             ),
                           ],
                           true

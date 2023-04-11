@@ -1,6 +1,6 @@
 import ts from 'typescript'
 
-export const isNodeExported = (node: ts.FunctionDeclaration): boolean => {
+export const isNodeExported = (node: ts.Node): boolean => {
   const modifierFlags = ts.getCombinedModifierFlags(node)
   return (modifierFlags & ts.ModifierFlags.Export) !== 0
 }
@@ -8,6 +8,24 @@ export const isNodeExported = (node: ts.FunctionDeclaration): boolean => {
 export const isNodeAsync = (node: ts.FunctionDeclaration): boolean => {
   const modifierFlags = ts.getCombinedModifierFlags(node)
   return (modifierFlags & ts.ModifierFlags.Async) !== 0
+}
+
+export function getLocalVariables(
+  node: ts.FunctionDeclaration
+): Record<string, true> {
+  const locals: Record<string, true> = {}
+
+  function visit(currentNode: ts.Node) {
+    if (ts.isIdentifier(currentNode)) {
+      locals[currentNode.text] = true
+    } else {
+      ts.forEachChild(currentNode, visit)
+    }
+  }
+
+  ts.forEachChild(node, visit)
+
+  return locals
 }
 
 /**

@@ -5,6 +5,7 @@ import {
   type AnnotationArguments,
   type AnnotationName,
 } from './annotations'
+import { getLocalVariables } from './node'
 import { reportErrorAt, reportSyntaxError } from './report'
 
 /**
@@ -93,9 +94,24 @@ function parseArguments<T extends AnnotationName>(
     ts.ScriptTarget.Latest
   )
 
-  // catch args syntax errors by evaluating the source code
+  // Catch annotation arguments syntax errors by evaluating the source code
   try {
-    eval(sourceFile.getText())
+    // Define a context object that includes all the variables that are
+    // available in the current scope, plus any other variables that the
+    // evaluated code might need.
+    const scope: any = {
+      // Include global variables
+      ...global,
+      // Include parameters
+      ...node.parameters.reduce((acc, param) => {
+        acc[param.name.getText()] = true
+        return acc
+      }, {} as Record<string, true>),
+      // Include local variables
+      ...getLocalVariables(node),
+    }
+
+    evalScope(sourceFile.getText(), scope)
   } catch (e) {
     return reportErrorAt(
       `Check parameters syntax for '$${annotationName}'`,
@@ -120,8 +136,13 @@ function parseArguments<T extends AnnotationName>(
   return args
 }
 
+function evalScope(source: string, scope: any): Function {
+  const fn = new Function(...Object.keys(scope), source)
+  return fn(...Object.values(scope))
+}
+
 function parseValue(expr: ts.Expression, sourceFile: ts.SourceFile): any {
-  let value: any
+  let value
 
   if (ts.isStringLiteral(expr)) {
     value = expr.text
@@ -144,6 +165,8 @@ function parseValue(expr: ts.Expression, sourceFile: ts.SourceFile): any {
     }
 
     value = tempValue
+  } else if (ts.isIdentifier(expr) || ts.isPropertyAccessExpression(expr)) {
+    value = expr
   } else {
     // If the initializer has an unsupported type, just store its text
     value = expr.getText(sourceFile)
