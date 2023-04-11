@@ -3,6 +3,7 @@ import { annotationNameEquals } from '../annotations'
 import { isNodeExported } from '../node'
 import { parseAnnotation } from '../parse'
 import type { ServerlessConfigFunctions } from '../transpile'
+import { trackMetricsTransformer } from './track-metrics'
 import { fixedTransfomer } from './fixed'
 import { httpTransfomer } from './http'
 import { scheduledTransfomer } from './scheduled'
@@ -13,11 +14,8 @@ function mainTransfomer(
   context: ts.TransformationContext,
   functionDetails: ServerlessConfigFunctions
 ): ts.FunctionDeclaration | undefined {
-  // Only consider exported nodes
-  if (!isNodeExported(node)) return
-
-  // Only consider function declarations nodes
-  if (!ts.isFunctionDeclaration(node)) return
+  // Only consider exported function declarations nodes
+  if (!isNodeExported(node) || !ts.isFunctionDeclaration(node)) return
 
   const symbol = node.name && checker.getSymbolAtLocation(node.name)
   if (!symbol) return
@@ -40,6 +38,8 @@ function mainTransfomer(
         functionDetails,
         parsedAnnotation.args
       )
+    } else if (annotationNameEquals(parsedAnnotation, 'TrackMetrics')) {
+      res = trackMetricsTransformer(node, context, parsedAnnotation)
     } else if (annotationNameEquals(parsedAnnotation, 'HttpApi')) {
       httpTransfomer(node, functionDetails, parsedAnnotation.args)
     } else if (annotationNameEquals(parsedAnnotation, 'Scheduled')) {

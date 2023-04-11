@@ -8,36 +8,28 @@ const updateFunctionBody: ts.Visitor = (node) => {
   return node
 }
 
-type FunctionInfo = {
+type FunctionNode = {
   parameters: ts.ParameterDeclaration[]
   block?: ts.Block
 }
 
 const updateFunction = (
-  node: ts.FunctionDeclaration | ts.VariableDeclaration,
+  node: ts.FunctionDeclaration,
   context: ts.TransformationContext
-): FunctionInfo => {
-  const info: FunctionInfo = {
+): FunctionNode => {
+  const functionNode: FunctionNode = {
     parameters: [],
     block: undefined,
   }
 
   ts.forEachChild(node, (currentNode) => {
-    if (ts.isParameter(currentNode)) info.parameters.push(currentNode)
+    if (ts.isParameter(currentNode)) functionNode.parameters.push(currentNode)
     else if (ts.isBlock(currentNode)) {
-      info.block = ts.visitEachChild(currentNode, updateFunctionBody, context)
-    } else if (
-      // detect anonymous functions
-      ts.isArrowFunction(currentNode) ||
-      ts.isFunctionExpression(currentNode)
-    ) {
-      info.parameters = [...currentNode.parameters]
-
-      info.block = ts.visitEachChild(
-        currentNode.body,
+      functionNode.block = ts.visitEachChild(
+        currentNode,
         updateFunctionBody,
         context
-      ) as ts.Block
+      )
     }
   })
 
@@ -47,14 +39,14 @@ const updateFunction = (
     ts.factory.createParameterDeclaration(undefined, undefined, 'callback'),
   ]
 
-  let newBlock = info.block
+  let newBlock = functionNode.block
   // if there are parameters to the function,
   // they should be mapped to the `event` cloud function parameter
-  if (info.parameters.length && info.block?.statements) {
-    const eventStatementList = buildEventStatementList(info.parameters)
+  if (functionNode.parameters.length && functionNode.block?.statements) {
+    const eventStatementList = buildEventStatementList(functionNode.parameters)
 
     newBlock = ts.factory.createBlock(
-      [...eventStatementList, ...info.block.statements],
+      [...eventStatementList, ...functionNode.block.statements],
       true
     )
   }
@@ -65,7 +57,7 @@ const updateFunction = (
 export const visitFunction = (
   node: ts.FunctionDeclaration,
   context: ts.TransformationContext
-) => {
+): ts.FunctionDeclaration => {
   const { parameters, block } = updateFunction(node, context)
 
   return ts.factory.updateFunctionDeclaration(

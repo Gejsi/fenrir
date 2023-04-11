@@ -1,9 +1,13 @@
 import ts from 'typescript'
 
-export const isNodeExported = (node: ts.Node) => {
-  const modifierFlags = ts.getCombinedModifierFlags(node as ts.Declaration)
-
+export const isNodeExported = (node: ts.FunctionDeclaration): boolean => {
+  const modifierFlags = ts.getCombinedModifierFlags(node)
   return (modifierFlags & ts.ModifierFlags.Export) !== 0
+}
+
+export const isNodeAsync = (node: ts.FunctionDeclaration): boolean => {
+  const modifierFlags = ts.getCombinedModifierFlags(node)
+  return (modifierFlags & ts.ModifierFlags.Async) !== 0
 }
 
 /**
