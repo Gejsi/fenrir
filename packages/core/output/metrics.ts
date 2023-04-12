@@ -1,5 +1,5 @@
 /**
- * $TrackMetrics(namespace: "fio", metricName: event)
+ * $TrackMetrics(namespace: "fio", metricName: "bar", metricValue: event.size)
  */
 export async function foo(event: any, context: any) {
     var _cloudwatch = new _CloudWatch();
@@ -7,7 +7,9 @@ export async function foo(event: any, context: any) {
         Namespace: "fio",
         MetricData: [
             {
-                MetricName: event
+                MetricName: "bar",
+                Timestamp: new Date(),
+                MetricName: event.size
             }
         ]
     }).promise();

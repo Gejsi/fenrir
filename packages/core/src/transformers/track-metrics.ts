@@ -21,7 +21,7 @@ export function trackMetricsTransformer(
     !annotation.args.metricName
   ) {
     return reportErrorAt(
-      `'$${annotation.name}' must receive both 'namespace' and 'metricName' as parameters`,
+      `'$${annotation.name}' must receive 'namespace' and 'metricName' as parameters`,
       node.name?.getText()!,
       node
     )
@@ -104,12 +104,25 @@ function updateFunction(
                         ts.factory.createObjectLiteralExpression(
                           [
                             ts.factory.createPropertyAssignment(
-                              'MetricName', // FIX: this should be mapped to "Value" and also corrected in the types
-                              annotation.args!.metricName.kind !== undefined
-                                ? annotation.args?.metricName
-                                : ts.factory.createStringLiteral(
-                                    annotation.args?.metricName
-                                  )
+                              'MetricName',
+                              ts.factory.createStringLiteral(
+                                annotation.args!.metricName
+                              )
+                            ),
+
+                            ts.factory.createPropertyAssignment(
+                              'Timestamp',
+                              ts.factory.createNewExpression(
+                                ts.factory.createIdentifier('Date'),
+                                undefined,
+                                []
+                              )
+                            ),
+
+                            ts.factory.createPropertyAssignment(
+                              'MetricName',
+                              annotation.args!.metricValue ??
+                                ts.factory.createNumericLiteral(1)
                             ),
                           ],
                           true

@@ -13,12 +13,16 @@ export type Annotation<T extends AnnotationName = AnnotationName> = {
 
 export const ANNOTATIONS: {
   Fixed: AwsFunctionHandler
-  TrackMetrics: { namespace: string; metricName: string | Expression }
+  TrackMetrics: {
+    namespace: string
+    metricName: string
+    metricValue: Expression | undefined
+  }
   HttpApi: HttpApiEvent
   Scheduled: Schedule
 } = {
   Fixed: { handler: '' },
-  TrackMetrics: { namespace: '', metricName: '' },
+  TrackMetrics: { namespace: '', metricName: '', metricValue: undefined },
   HttpApi: { method: '', path: '' },
   Scheduled: { rate: '' },
 }

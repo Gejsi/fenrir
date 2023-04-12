@@ -1,5 +1,5 @@
 /**
- * $TrackMetrics(namespace: "fio", metricName: event)
+ * $TrackMetrics(namespace: "fio", metricName: "bar", metricValue: event.size)
  */
 export async function foo(event: any, context: any) {
   const b = 1
