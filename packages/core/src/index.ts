@@ -7,3 +7,5 @@ transpile({
   serverlessConfigPath: 'input/serverless.yml',
   outputDirectory: 'output',
 })
+
+console.log('Finished transpiling')

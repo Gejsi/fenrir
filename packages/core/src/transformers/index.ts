@@ -2,7 +2,7 @@ import ts from 'typescript'
 import { annotationNameEquals } from '../annotations'
 import { isNodeExported } from '../node'
 import { parseAnnotation } from '../parse'
-import type { ServerlessConfigFunctions } from '../transpile'
+import type { SourceFileImports, ServerlessConfigFunctions } from '../transpile'
 import { trackMetricsTransformer } from './track-metrics'
 import { fixedTransfomer } from './fixed'
 import { httpTransfomer } from './http'
@@ -12,8 +12,9 @@ function mainTransfomer(
   node: ts.Node,
   checker: ts.TypeChecker,
   context: ts.TransformationContext,
-  functionDetails: ServerlessConfigFunctions
-): ts.FunctionDeclaration | undefined {
+  functionDetails: ServerlessConfigFunctions,
+  imports: SourceFileImports
+): ts.Node | undefined {
   // Only consider exported function declarations nodes
   if (!isNodeExported(node) || !ts.isFunctionDeclaration(node)) return
 
@@ -25,7 +26,7 @@ function mainTransfomer(
     .split(/\n(?!\s)/)
     .filter((c) => c.startsWith('$'))
 
-  let res: ts.FunctionDeclaration | undefined
+  let res: ts.Node | undefined
 
   for (const comment of comments) {
     const parsedAnnotation = parseAnnotation(comment, symbol.getName(), node)
@@ -39,7 +40,7 @@ function mainTransfomer(
         parsedAnnotation.args
       )
     } else if (annotationNameEquals(parsedAnnotation, 'TrackMetrics')) {
-      res = trackMetricsTransformer(node, context, parsedAnnotation)
+      res = trackMetricsTransformer(node, imports, parsedAnnotation)
     } else if (annotationNameEquals(parsedAnnotation, 'HttpApi')) {
       httpTransfomer(node, functionDetails, parsedAnnotation.args)
     } else if (annotationNameEquals(parsedAnnotation, 'Scheduled')) {
@@ -53,11 +54,21 @@ function mainTransfomer(
 /** This transformer maps all sub-transformers*/
 export function superTransformer(
   checker: ts.TypeChecker,
-  functionDetails: ServerlessConfigFunctions
+  functionDetails: ServerlessConfigFunctions,
+  imports: SourceFileImports
 ): ts.TransformerFactory<ts.SourceFile> {
   return (context) => (sourceFile) => {
     const visitor: ts.Visitor = (node) => {
-      const res = mainTransfomer(node, checker, context, functionDetails)
+      if (ts.isImportDeclaration(node))
+        imports.set(sourceFile.fileName, node.moduleSpecifier.getText())
+
+      const res = mainTransfomer(
+        node,
+        checker,
+        context,
+        functionDetails,
+        imports
+      )
 
       // if the function transformation was successful, return the new node...
       if (res) return res

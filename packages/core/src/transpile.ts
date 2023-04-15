@@ -5,6 +5,7 @@ import { superTransformer } from './transformers'
 import { reportDiagnostics } from './report'
 
 export type ServerlessConfigFunctions = Map<string, AwsFunctionHandler>
+export type SourceFileImports = Map<string, string>
 
 type Options = {
   files: string[] | string
@@ -49,16 +50,16 @@ export function transpile({
 
   const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed })
   const checker = program.getTypeChecker()
-  /** Function details that will be used for emitting `serverless.yml` */
+  /** Metadata function details that will be used for emitting `serverless.yml` */
   const functionDetails: ServerlessConfigFunctions = new Map()
-
-  const globalTransformer = superTransformer(checker, functionDetails)
+  /** Handles imported module specifiers */
+  const imports: SourceFileImports = new Map()
 
   for (const sourceFile of program.getSourceFiles()) {
     if (!sourceFile.isDeclarationFile) {
       const { transformed: transformedSourceFiles, diagnostics } = ts.transform(
         sourceFile,
-        [globalTransformer]
+        [superTransformer(checker, functionDetails, imports)]
       )
       const transformedSourceFile = transformedSourceFiles[0]
 

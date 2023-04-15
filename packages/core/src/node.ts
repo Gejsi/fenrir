@@ -1,7 +1,7 @@
 import ts from 'typescript'
 
 export const isNodeExported = (node: ts.Node): boolean => {
-  const modifierFlags = ts.getCombinedModifierFlags(node)
+  const modifierFlags = ts.getCombinedModifierFlags(node as ts.Declaration)
   return (modifierFlags & ts.ModifierFlags.Export) !== 0
 }
 
@@ -10,6 +10,7 @@ export const isNodeAsync = (node: ts.FunctionDeclaration): boolean => {
   return (modifierFlags & ts.ModifierFlags.Async) !== 0
 }
 
+// TODO: check out node.locals or local.identifiers
 export function getLocalVariables(
   node: ts.FunctionDeclaration
 ): Record<string, true> {

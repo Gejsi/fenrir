@@ -94,7 +94,7 @@ function parseArguments<T extends AnnotationName>(
     ts.ScriptTarget.Latest
   )
 
-  // Catch annotation arguments syntax errors by evaluating the source code
+  // Catch arguments syntax errors by evaluating the source code
   try {
     // Define a context object that includes all the variables that are
     // available in the current scope, plus any other variables that the
@@ -166,6 +166,7 @@ function parseValue(expr: ts.Expression, sourceFile: ts.SourceFile): any {
 
     value = tempValue
   } else if (ts.isIdentifier(expr) || ts.isPropertyAccessExpression(expr)) {
+    // TODO: maybe all other unknown types should be parsed like this
     value = expr
   } else {
     // If the initializer has an unsupported type, just store its text
