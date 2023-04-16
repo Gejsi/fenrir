@@ -1,29 +1,30 @@
 import ts from 'typescript'
 import { parse as parseFileName } from 'path'
-import { ServerlessConfigFunctions } from '../transpile'
-import type { AnnotationArguments } from '../annotations'
+import type { Annotation } from '../annotations'
 import { reportErrorAt } from '../report'
 
 export function scheduledTransfomer(
   node: ts.FunctionDeclaration,
-  functionDetails: ServerlessConfigFunctions,
-  annotationArgs: AnnotationArguments<'Scheduled'> | undefined
+  context: ts.TransformationContext,
+  annotation: Annotation<'Scheduled'>
 ): void {
   const nodeName = node.name?.getText()
   if (!nodeName) return
 
+  const annotationArgs = annotation.args
+
   if (!annotationArgs || !annotationArgs.rate) {
     return reportErrorAt(
-      "'$Scheduled' must receive the 'rate' parameter",
+      `'$${annotation.name}' must receive the 'rate' parameter`,
       nodeName,
       node
     )
   }
 
-  const details = functionDetails.get(nodeName)
+  const details = context.slsFunctionDetails.get(nodeName)
 
   if (!details || !details.handler) {
-    functionDetails.set(nodeName, {
+    context.slsFunctionDetails.set(nodeName, {
       handler:
         parseFileName(node.getSourceFile().fileName).name + '.' + nodeName,
       events: [{ schedule: annotationArgs }],

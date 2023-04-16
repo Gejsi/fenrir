@@ -1,11 +1,20 @@
 import ts from 'typescript'
 import { emitFile, emitServerlessConfig } from './emit'
-import type { AwsFunctionHandler } from 'serverless/aws'
 import { superTransformer } from './transformers'
+import type { AwsFunctionHandler } from 'serverless/aws'
 import { reportDiagnostics } from './report'
 
 export type ServerlessConfigFunctions = Map<string, AwsFunctionHandler>
-export type SourceFileImports = Map<string, string>
+export type SourceFileImports = Set<string>
+
+declare module 'typescript' {
+  interface TransformationContext {
+    /** Metadata function details that will be used for emitting `serverless.yml` */
+    slsFunctionDetails: ServerlessConfigFunctions
+    /** Handles dependencies needed for a source file */
+    imports: SourceFileImports
+  }
+}
 
 type Options = {
   files: string[] | string
@@ -50,16 +59,13 @@ export function transpile({
 
   const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed })
   const checker = program.getTypeChecker()
-  /** Metadata function details that will be used for emitting `serverless.yml` */
   const functionDetails: ServerlessConfigFunctions = new Map()
-  /** Handles imported module specifiers */
-  const imports: SourceFileImports = new Map()
 
   for (const sourceFile of program.getSourceFiles()) {
     if (!sourceFile.isDeclarationFile) {
       const { transformed: transformedSourceFiles, diagnostics } = ts.transform(
         sourceFile,
-        [superTransformer(checker, functionDetails, imports)]
+        [superTransformer(checker, functionDetails)]
       )
       const transformedSourceFile = transformedSourceFiles[0]
 

@@ -31,7 +31,6 @@ export function getUser(event: any, context: any) {
  *     inputPathap: { eventTime: '$.time' },
  *     inputTemplate: '{"time": <eventTime>, "key1": "value1"}'
  *   },
- *   dude: () => a + b
  *  )
  *  @returns
  */

@@ -2,11 +2,10 @@ import ts from 'typescript'
 import type { Annotation } from '../annotations'
 import { isNodeAsync } from '../node'
 import { reportErrorAt } from '../report'
-import { SourceFileImports } from '../transpile'
 
 export function trackMetricsTransformer(
   node: ts.FunctionDeclaration,
-  imports: SourceFileImports,
+  context: ts.TransformationContext,
   annotation: Annotation<'TrackMetrics'>
 ): ts.SourceFile | undefined {
   if (!isNodeAsync(node))
@@ -46,19 +45,19 @@ export function trackMetricsTransformer(
     undefined
   )
 
-  const updatedFunction = visitFunction(node, annotation)
+  const newFunction = visitFunction(node, annotation)
 
-  // if the import cloudwatch import doesn't already exist
-  if (imports.get(node.getSourceFile().fileName) !== `'${importSpecifier}'`) {
-    imports.set(node.getSourceFile().fileName, `'${importSpecifier}'`)
+  // if the cloudwatch import doesn't exist yet
+  if (!context.imports.has(`'${importSpecifier}'`)) {
+    context.imports.add(`'${importSpecifier}'`)
 
     return ts.factory.updateSourceFile(node.getSourceFile(), [
       importDeclaration,
-      updatedFunction,
+      newFunction,
     ])
   }
 
-  return ts.factory.updateSourceFile(node.getSourceFile(), [updatedFunction])
+  return ts.factory.updateSourceFile(node.getSourceFile(), [newFunction])
 }
 
 function visitFunction(
