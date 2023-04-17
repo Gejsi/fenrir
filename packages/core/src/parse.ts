@@ -5,8 +5,8 @@ import {
   type AnnotationArguments,
   type AnnotationName,
 } from './annotations'
-import { getLocalVariables } from './node'
 import { reportErrorAt, reportSyntaxError } from './report'
+import { Locals } from './transpile'
 
 /**
  * This regex uses a non-capturing group (?:...) and the | operator to match either a sequence
@@ -30,7 +30,8 @@ type Match =
 export function parseAnnotation(
   text: string,
   nodeName: string | undefined,
-  node: ts.FunctionDeclaration
+  node: ts.FunctionDeclaration,
+  context: ts.TransformationContext
 ): Annotation | undefined {
   const match = text.match(noteRegex) as Match
 
@@ -76,7 +77,13 @@ export function parseAnnotation(
 
   return {
     name: name as AnnotationName,
-    args: parseArguments(name as AnnotationName, argsText, nodeName, node),
+    args: parseArguments(
+      name as AnnotationName,
+      argsText,
+      nodeName,
+      node,
+      context
+    ),
   }
 }
 
@@ -84,7 +91,8 @@ function parseArguments<T extends AnnotationName>(
   annotationName: AnnotationName,
   argsString: string | undefined,
   nodeName: string | undefined,
-  node: ts.FunctionDeclaration
+  node: ts.FunctionDeclaration,
+  context: ts.TransformationContext
 ): AnnotationArguments<T> | undefined {
   if (!argsString) return
 
@@ -96,22 +104,7 @@ function parseArguments<T extends AnnotationName>(
 
   // Catch arguments syntax errors by evaluating the source code
   try {
-    // Define a context object that includes all the variables that are
-    // available in the current scope, plus any other variables that the
-    // evaluated code might need.
-    const scope: any = {
-      // Include global variables
-      ...global,
-      // Include parameters
-      ...node.parameters.reduce((acc, param) => {
-        acc[param.name.getText()] = true
-        return acc
-      }, {} as Record<string, true>),
-      // Include local variables
-      ...getLocalVariables(node),
-    }
-
-    evalScope(sourceFile.getText(), scope)
+    evalContext(sourceFile.getText(), context.locals)
   } catch (e) {
     return reportErrorAt(
       `Check parameters syntax for '$${annotationName}'`,
@@ -136,9 +129,9 @@ function parseArguments<T extends AnnotationName>(
   return args
 }
 
-function evalScope(source: string, scope: any): Function {
-  const fn = new Function(...Object.keys(scope), source)
-  return fn(...Object.values(scope))
+function evalContext(source: string, locals: Locals): Function {
+  const fn = new Function(...locals.keys(), source)
+  return fn(...locals.values())
 }
 
 function parseValue(expr: ts.Expression, sourceFile: ts.SourceFile): any {

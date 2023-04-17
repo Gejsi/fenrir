@@ -1,6 +1,5 @@
 import { CloudWatch } from "aws-sdk";
 /**
- * $Fixed
  * $TrackMetrics(namespace: "fio", metricName: "bar", metricValue: event.size)
  */
 export async function t1(event: any, context: any) {
@@ -15,10 +14,9 @@ export async function t1(event: any, context: any) {
             }
         ]
     }).promise();
-    return context;
+    return a;
 }
 /**
- * $Fixed
  * $TrackMetrics(namespace: "fio", metricName: "bar", metricValue: event.size)
  */
 export async function t2(event: any, context: any) {
@@ -33,5 +31,7 @@ export async function t2(event: any, context: any) {
             }
         ]
     }).promise();
-    return event;
+    const lol = 40;
+    const c = (x: number, y: number) => x + y;
+    return b;
 }

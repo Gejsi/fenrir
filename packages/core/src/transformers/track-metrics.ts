@@ -118,7 +118,7 @@ function visitFunction(
                                 []
                               )
                             ),
-
+                            // FIX: this panics if metricValue isn't an Expression
                             ts.factory.createPropertyAssignment(
                               'Value',
                               annotation.args!.metricValue ??

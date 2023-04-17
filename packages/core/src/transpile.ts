@@ -6,13 +6,16 @@ import { reportDiagnostics } from './report'
 
 export type ServerlessConfigFunctions = Map<string, AwsFunctionHandler>
 export type SourceFileImports = Set<string>
+export type Locals = Map<string, ts.Symbol>
 
 declare module 'typescript' {
   interface TransformationContext {
-    /** Metadata function details that will be used for emitting `serverless.yml` */
+    /** Metadata function details that will be used for emitting `serverless.yml`. */
     slsFunctionDetails: ServerlessConfigFunctions
-    /** Handles dependencies needed for a source file */
+    /** Imports needed for a source file. */
     imports: SourceFileImports
+    /** Function nodes dependencies needed for evaluation to check annotations correctness.  */
+    locals: Locals
   }
 }
 

@@ -10,25 +10,6 @@ export const isNodeAsync = (node: ts.FunctionDeclaration): boolean => {
   return (modifierFlags & ts.ModifierFlags.Async) !== 0
 }
 
-// TODO: check out node.locals or local.identifiers
-export function getLocalVariables(
-  node: ts.FunctionDeclaration
-): Record<string, true> {
-  const locals: Record<string, true> = {}
-
-  function visit(currentNode: ts.Node) {
-    if (ts.isIdentifier(currentNode)) {
-      locals[currentNode.text] = true
-    } else {
-      ts.forEachChild(currentNode, visit)
-    }
-  }
-
-  ts.forEachChild(node, visit)
-
-  return locals
-}
-
 /**
  * Makes an expression like: `JSON.parse(event.x)`
  */

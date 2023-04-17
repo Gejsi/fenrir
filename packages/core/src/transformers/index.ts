@@ -8,7 +8,7 @@ import { httpTransfomer } from './http'
 import { scheduledTransfomer } from './scheduled'
 import type { ServerlessConfigFunctions } from '../transpile'
 
-/** This transformer maps all sub-transformers*/
+/** This transformer maps all sub-transformers */
 export function superTransformer(
   checker: ts.TypeChecker,
   functionDetails: ServerlessConfigFunctions
@@ -45,6 +45,9 @@ function mainTransfomer(
   // Only consider exported function declarations nodes
   if (!isNodeExported(node) || !ts.isFunctionDeclaration(node)) return
 
+  // Define locals for annotations evaluation
+  context.locals = (node as any).locals
+
   const symbol = node.name && checker.getSymbolAtLocation(node.name)
   if (!symbol) return
 
@@ -56,7 +59,12 @@ function mainTransfomer(
   let res: ts.Node | undefined
 
   for (const comment of comments) {
-    const parsedAnnotation = parseAnnotation(comment, symbol.getName(), node)
+    const parsedAnnotation = parseAnnotation(
+      comment,
+      symbol.getName(),
+      node,
+      context
+    )
     if (!parsedAnnotation) continue
 
     if (annotationNameEquals(parsedAnnotation, 'Fixed')) {
