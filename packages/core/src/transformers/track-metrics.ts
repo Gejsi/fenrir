@@ -1,5 +1,5 @@
 import ts from 'typescript'
-import type { Annotation } from '../annotations'
+import { Annotation, annotationNameEquals } from '../annotations'
 import { isNodeAsync } from '../node'
 import { reportErrorAt } from '../report'
 
@@ -11,7 +11,7 @@ export function trackMetricsTransformer(
   if (!isNodeAsync(node))
     return reportErrorAt(
       `'$${annotation.name}' must be async`,
-      node.name?.getText()!,
+      node.name!.getText(),
       node
     )
 
@@ -22,7 +22,29 @@ export function trackMetricsTransformer(
   ) {
     return reportErrorAt(
       `'$${annotation.name}' must receive 'namespace' and 'metricName' as parameters`,
-      node.name?.getText()!,
+      node.name!.getText(),
+      node
+    )
+  }
+
+  if (
+    typeof annotation.args.namespace !== 'string' ||
+    typeof annotation.args.metricName !== 'string'
+  ) {
+    return reportErrorAt(
+      `'$${annotation.name}' must receive strings as values for 'namespace' and 'metricName' parameters`,
+      node.name!.getText(),
+      node
+    )
+  }
+
+  if (
+    typeof annotation.args.metricValue !== 'object' ||
+    !annotation.args.metricValue.kind
+  ) {
+    return reportErrorAt(
+      `'$${annotation.name}' must receive expressions as a value for the 'metricValue' parameter`,
+      node.name!.getText(),
       node
     )
   }
@@ -118,7 +140,7 @@ function visitFunction(
                                 []
                               )
                             ),
-                            // FIX: this panics if metricValue isn't an Expression
+
                             ts.factory.createPropertyAssignment(
                               'Value',
                               annotation.args!.metricValue ??

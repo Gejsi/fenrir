@@ -121,7 +121,10 @@ function parseArguments<T extends AnnotationName>(
   for (const prop of properties) {
     if (ts.isPropertyAssignment(prop)) {
       const key = prop.name.getText(sourceFile) as keyof AnnotationArguments<T>
-      const value = parseValue(prop.initializer, sourceFile)
+      const value = parseExpression(
+        prop.initializer,
+        sourceFile
+      ) as AnnotationArguments<T>[keyof AnnotationArguments<T>]
       args[key] = value
     }
   }
@@ -134,7 +137,10 @@ function evalContext(source: string, locals: Locals): Function {
   return fn(...locals.values())
 }
 
-function parseValue(expr: ts.Expression, sourceFile: ts.SourceFile): any {
+function parseExpression(
+  expr: ts.Expression,
+  sourceFile: ts.SourceFile
+): unknown {
   let value
 
   if (ts.isStringLiteral(expr)) {
@@ -146,24 +152,21 @@ function parseValue(expr: ts.Expression, sourceFile: ts.SourceFile): any {
   } else if (expr.kind === ts.SyntaxKind.FalseKeyword) {
     value = false
   } else if (ts.isArrayLiteralExpression(expr)) {
-    value = expr.elements.map((element) => parseValue(element, sourceFile))
+    value = expr.elements.map((element) => parseExpression(element, sourceFile))
   } else if (ts.isObjectLiteralExpression(expr)) {
     const tempValue: Record<string, any> = {}
 
     for (const prop of expr.properties) {
       if (ts.isPropertyAssignment(prop)) {
         const key = prop.name.getText(sourceFile)
-        tempValue[key] = parseValue(prop.initializer, sourceFile)
+        tempValue[key] = parseExpression(prop.initializer, sourceFile)
       }
     }
 
     value = tempValue
-  } else if (ts.isIdentifier(expr) || ts.isPropertyAccessExpression(expr)) {
-    // TODO: maybe all other unknown types should be parsed like this
-    value = expr
   } else {
-    // If the initializer has an unsupported type, just store its text
-    value = expr.getText(sourceFile)
+    // If the initializer has an unsupported type, just store its expression
+    value = expr
   }
 
   return value

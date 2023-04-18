@@ -17,12 +17,12 @@ export async function t1(event: any, context: any) {
     return a;
 }
 /**
- * $TrackMetrics(namespace: "fio", metricName: "bar", metricValue: event.size)
+ * $TrackMetrics(namespace: "foo", metricName: "bar", metricValue: event.size)
  */
 export async function t2(event: any, context: any) {
     var _cloudwatch = new CloudWatch();
     await _cloudwatch.putMetricData({
-        Namespace: "fio",
+        Namespace: "foo",
         MetricData: [
             {
                 MetricName: "bar",

@@ -6,7 +6,7 @@ export async function t1(event: any, context: any) {
 }
 
 /**
- * $TrackMetrics(namespace: "fio", metricName: "bar", metricValue: event.size)
+ * $TrackMetrics(namespace: "foo", metricName: "bar", metricValue: event.size)
  */
 export async function t2(event: any, context: any) {
   const lol = 40
