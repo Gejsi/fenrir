@@ -107,7 +107,7 @@ function parseArguments<T extends AnnotationName>(
     evalContext(sourceFile.getText(), context.locals)
   } catch (e) {
     return reportErrorAt(
-      `Check parameters syntax for '$${annotationName}'`,
+      `Check the syntax you provided for '$${annotationName}' parameters`,
       nodeName!,
       node
     )

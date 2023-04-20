@@ -20,7 +20,7 @@ export async function foo(event, context, callback) {
  * $TrackMetrics(namespace: "fio", metricName: "bar", metricValue: event.size)
  */
 export async function lok(event: any, context: any) {
-    var _cloudwatch = new CloudWatch();
+    const _cloudwatch = new CloudWatch();
     await _cloudwatch.putMetricData({
         Namespace: "fio",
         MetricData: [

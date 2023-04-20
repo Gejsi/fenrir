@@ -1,37 +1,38 @@
 import { CloudWatch } from "aws-sdk";
 /**
- * $TrackMetrics(namespace: "fio", metricName: "bar", metricValue: event.size)
+ * $TrackMetrics(namespace: "fio", metricName: "bar", metricValue: firstParam)
  */
-export async function t1(event: any, context: any) {
-    var _cloudwatch = new CloudWatch();
+export async function t1(firstParam: any, secondParam: any) {
+    const _cloudwatch = new CloudWatch();
     await _cloudwatch.putMetricData({
         Namespace: "fio",
         MetricData: [
             {
                 MetricName: "bar",
                 Timestamp: new Date(),
-                Value: event.size
+                Value: firstParam
             }
         ]
     }).promise();
-    return a;
+    return firstParam;
 }
 /**
- * $TrackMetrics(namespace: "foo", metricName: "bar", metricValue: event.size)
+ * $Fixed
+ * $TrackMetrics(namespace: "foo", metricName: "bar", metricValue: lok)
  */
-export async function t2(event: any, context: any) {
-    var _cloudwatch = new CloudWatch();
+export async function t2(firstParam: any, secondParam: any) {
+    const _cloudwatch = new CloudWatch();
     await _cloudwatch.putMetricData({
         Namespace: "foo",
         MetricData: [
             {
                 MetricName: "bar",
                 Timestamp: new Date(),
-                Value: event.size
+                Value: lok
             }
         ]
     }).promise();
-    const lol = 40;
+    const lok = 40;
     const c = (x: number, y: number) => x + y;
-    return b;
+    return c;
 }

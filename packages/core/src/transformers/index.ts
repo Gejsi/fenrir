@@ -20,8 +20,15 @@ export function superTransformer(
       context.imports = new Set()
 
       const visitor: ts.Visitor = (node) => {
-        if (ts.isImportDeclaration(node))
-          context.imports.add(node.moduleSpecifier.getText())
+        if (ts.isImportDeclaration(node)) {
+          context.imports.add(
+            node.moduleSpecifier
+              .getText()
+              .substring(1, node.moduleSpecifier.getText().length - 1) // remove quotes from module specifier
+          )
+
+          return node
+        }
 
         const res = mainTransfomer(node, checker, context)
 
@@ -42,10 +49,10 @@ function mainTransfomer(
   checker: ts.TypeChecker,
   context: ts.TransformationContext
 ): ts.Node | undefined {
-  // Only consider exported function declarations nodes
+  // Only consider exported function declarations
   if (!isNodeExported(node) || !ts.isFunctionDeclaration(node)) return
 
-  // Define locals for annotations evaluation
+  // Define local environment
   context.locals = (node as any).locals
 
   const symbol = node.name && checker.getSymbolAtLocation(node.name)

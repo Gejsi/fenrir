@@ -19,6 +19,12 @@ functions:
     handler: hello.hi
   hello:
     handler: hello.greet
+  t2:
+    handler: test.t2
+  foo:
+    handler: metrics.foo
+  lok:
+    handler: metrics.lok
 plugins:
   - serverless-offline
   - serverless-esbuild

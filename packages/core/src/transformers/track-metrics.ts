@@ -1,5 +1,5 @@
 import ts from 'typescript'
-import { Annotation, annotationNameEquals } from '../annotations'
+import { Annotation } from '../annotations'
 import { isNodeAsync } from '../node'
 import { reportErrorAt } from '../report'
 
@@ -67,11 +67,11 @@ export function trackMetricsTransformer(
     undefined
   )
 
-  const newFunction = visitFunction(node, annotation)
+  const newFunction = visitFunction(node, context, annotation)
 
   // if the cloudwatch import doesn't exist yet
-  if (!context.imports.has(`'${importSpecifier}'`)) {
-    context.imports.add(`'${importSpecifier}'`)
+  if (!context.imports.has(importSpecifier)) {
+    context.imports.add(importSpecifier)
 
     return ts.factory.updateSourceFile(node.getSourceFile(), [
       importDeclaration,
@@ -84,6 +84,7 @@ export function trackMetricsTransformer(
 
 function visitFunction(
   node: ts.FunctionDeclaration,
+  context: ts.TransformationContext,
   annotation: Annotation<'TrackMetrics'>
 ): ts.FunctionDeclaration {
   const cloudwatchVar = ts.factory.createVariableDeclaration(
@@ -97,9 +98,13 @@ function visitFunction(
     )
   )
 
-  const varStatement = ts.factory.createVariableStatement(undefined, [
-    cloudwatchVar,
-  ])
+  const varStatement = ts.factory.createVariableStatement(
+    undefined,
+    ts.factory.createVariableDeclarationList(
+      [cloudwatchVar],
+      ts.NodeFlags.Const
+    )
+  )
 
   const awaitedStatement = ts.factory.createExpressionStatement(
     ts.factory.createAwaitExpression(
@@ -165,6 +170,10 @@ function visitFunction(
       )
     )
   )
+
+  // ts.forEachChild(node.body!, (currentNode) => {
+  //   console.log(currentNode.getText())
+  // })
 
   return ts.factory.updateFunctionDeclaration(
     node, // node

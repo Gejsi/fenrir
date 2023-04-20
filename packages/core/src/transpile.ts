@@ -14,7 +14,10 @@ declare module 'typescript' {
     slsFunctionDetails: ServerlessConfigFunctions
     /** Imports needed for a source file. */
     imports: SourceFileImports
-    /** Function nodes dependencies needed for evaluation to check annotations correctness.  */
+    /**
+     * Function nodes dependencies such as parameters and local variables
+     * (also needed for evaluation to check annotations correctness).
+     */
     locals: Locals
   }
 }

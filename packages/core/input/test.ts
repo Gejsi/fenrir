@@ -1,17 +1,18 @@
 /**
- * $TrackMetrics(namespace: "fio", metricName: "bar", metricValue: event.size)
+ * $TrackMetrics(namespace: "fio", metricName: "bar", metricValue: firstParam)
  */
-export async function t1(event: any, context: any) {
-  return a
+export async function t1(firstParam: any, secondParam: any) {
+  return firstParam
 }
 
 /**
- * $TrackMetrics(namespace: "foo", metricName: "bar", metricValue: event.size)
+ * $Fixed
+ * $TrackMetrics(namespace: "foo", metricName: "bar", metricValue: lok)
  */
-export async function t2(event: any, context: any) {
-  const lol = 40
+export async function t2(firstParam: any, secondParam: any) {
+  const lok = 40
 
   const c = (x: number, y: number) => x + y
 
-  return b
+  return c
 }
