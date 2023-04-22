@@ -5,6 +5,8 @@ export async function t1(firstParam: any, secondParam: any) {
   return firstParam
 }
 
+console.log('divider')
+
 /**
  * $Fixed
  * $TrackMetrics(namespace: "foo", metricName: "bar", metricValue: lok)

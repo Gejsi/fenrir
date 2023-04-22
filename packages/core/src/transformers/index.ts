@@ -20,6 +20,10 @@ export function superTransformer(
       context.imports = new Set()
 
       const visitor: ts.Visitor = (node) => {
+        // if the visitor is at source file level, keep traversing the AST
+        if (ts.isSourceFile(node))
+          return ts.visitEachChild(node, visitor, context)
+
         if (ts.isImportDeclaration(node)) {
           context.imports.add(
             node.moduleSpecifier
@@ -32,11 +36,8 @@ export function superTransformer(
 
         const res = mainTransfomer(node, checker, context)
 
-        // if the function transformation was successful, return the new node...
+        // if the function transformation was successful, return the new node
         if (res) return res
-
-        // ...otherwise, keep traversing the AST
-        return ts.visitEachChild(node, visitor, context)
       }
 
       return ts.visitNode(sourceFile, visitor)
