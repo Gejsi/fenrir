@@ -38,15 +38,24 @@ export function trackMetricsTransformer(
     )
   }
 
+  const isLocal = context.locals.get(
+    (annotation.args.metricValue as ts.Identifier)?.escapedText as string
+  )
+
+  // TODO: maybe add support for literal numbers?
   if (
     annotation.args.metricValue &&
-    !ts.isIdentifier(annotation.args.metricValue)
+    (!ts.isIdentifier(annotation.args.metricValue) || !isLocal)
   ) {
-    return reportErrorAt(
-      `'$${annotation.name}' can only receive an identifier as\na value for the 'metricValue' parameter`,
-      node.name!.getText(),
-      node
-    )
+    let errorText = `'$${annotation.name}' can only receive an identifier as\na value for the 'metricValue' parameter like\n`
+
+    for (const [localName] of context.locals) {
+      errorText += `'${localName}'` + ' | '
+    }
+
+    errorText = errorText.substring(0, errorText.length - 3) // - 3 removes the last " | " chars
+
+    return reportErrorAt(errorText, node.name!.getText(), node)
   }
 
   const importSpecifier = 'aws-sdk'
@@ -79,6 +88,7 @@ export function trackMetricsTransformer(
     ])
   }
 
+  // TODO: support named and default imports
   return ts.factory.updateSourceFile(node.getSourceFile(), [newFunction])
 }
 

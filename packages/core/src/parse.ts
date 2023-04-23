@@ -102,17 +102,6 @@ function parseArguments<T extends AnnotationName>(
     ts.ScriptTarget.Latest
   )
 
-  // Catch arguments syntax errors by evaluating the source code
-  try {
-    evalContext(sourceFile.getText(), context.locals)
-  } catch (e) {
-    return reportErrorAt(
-      `Check the syntax you provided for '$${annotationName}' parameters`,
-      nodeName!,
-      node
-    )
-  }
-
   const args = {} as AnnotationArguments<T>
 
   const { properties } = (sourceFile.statements[0] as ts.VariableStatement)
@@ -131,11 +120,6 @@ function parseArguments<T extends AnnotationName>(
   }
 
   return args
-}
-
-function evalContext(source: string, locals: Locals): Function {
-  const fn = new Function(...locals.keys(), source)
-  return fn(...locals.values())
 }
 
 function parseExpression(
