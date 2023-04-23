@@ -39,11 +39,11 @@ export function trackMetricsTransformer(
   }
 
   if (
-    typeof annotation.args.metricValue !== 'object' ||
-    !annotation.args.metricValue.kind
+    annotation.args.metricValue &&
+    !ts.isIdentifier(annotation.args.metricValue)
   ) {
     return reportErrorAt(
-      `'$${annotation.name}' must receive expressions as a value for the 'metricValue' parameter`,
+      `'$${annotation.name}' can only receive an identifier as\na value for the 'metricValue' parameter`,
       node.name!.getText(),
       node
     )
@@ -87,21 +87,21 @@ function visitFunction(
   context: ts.TransformationContext,
   annotation: Annotation<'TrackMetrics'>
 ): ts.FunctionDeclaration {
-  const cloudwatchVar = ts.factory.createVariableDeclaration(
-    '_cloudwatch',
-    undefined,
-    undefined,
-    ts.factory.createNewExpression(
-      ts.factory.createIdentifier('CloudWatch'),
-      undefined,
-      []
-    )
-  )
-
   const varStatement = ts.factory.createVariableStatement(
     undefined,
     ts.factory.createVariableDeclarationList(
-      [cloudwatchVar],
+      [
+        ts.factory.createVariableDeclaration(
+          '_cloudwatch',
+          undefined,
+          undefined,
+          ts.factory.createNewExpression(
+            ts.factory.createIdentifier('CloudWatch'),
+            undefined,
+            []
+          )
+        ),
+      ],
       ts.NodeFlags.Const
     )
   )
@@ -171,9 +171,31 @@ function visitFunction(
     )
   )
 
-  // ts.forEachChild(node.body!, (currentNode) => {
-  //   console.log(currentNode.getText())
-  // })
+  // Define a new block for environment-aware block transformation
+  let newBlock: ts.Block | undefined
+
+  ts.forEachChild(node, (currentNode) => {
+    if (ts.isBlock(currentNode)) {
+      newBlock = ts.visitEachChild(
+        currentNode,
+        (childNode) => {
+          if (
+            ts.isVariableStatement(childNode) &&
+            childNode.declarationList.declarations[0]?.name.getText() ===
+              (annotation.args?.metricValue as ts.Identifier)?.escapedText
+          ) {
+            return [childNode, varStatement, awaitedStatement]
+          }
+
+          return childNode
+        },
+        context
+      )
+    }
+  })
+
+  // True if the statements were placed under an identifier (excluding function parameters)
+  const isAware = newBlock?.statements.length !== node.body?.statements.length
 
   return ts.factory.updateFunctionDeclaration(
     node, // node
@@ -183,10 +205,12 @@ function visitFunction(
     node.typeParameters, // typeParameters
     node.parameters, // parameters
     node.type, // returnType
-    ts.factory.updateBlock(node.body!, [
-      varStatement,
-      awaitedStatement,
-      ...(node.body?.statements ?? []),
-    ]) // block
+    isAware
+      ? newBlock
+      : ts.factory.updateBlock(node.body!, [
+          varStatement,
+          awaitedStatement,
+          ...(node.body?.statements ?? []),
+        ]) // block
   )
 }

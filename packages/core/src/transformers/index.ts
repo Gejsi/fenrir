@@ -15,6 +15,7 @@ export function superTransformer(
 ): ts.TransformerFactory<ts.SourceFile> {
   return (context) => {
     context.slsFunctionDetails = functionDetails
+    context.typeChecker = checker
 
     return (sourceFile) => {
       context.imports = new Set()
@@ -34,7 +35,7 @@ export function superTransformer(
           return node
         }
 
-        const res = mainTransfomer(node, checker, context)
+        const res = mainTransfomer(node, context)
 
         // if the function transformation was successful, return the new node
         if (res) return res
@@ -47,20 +48,19 @@ export function superTransformer(
 
 function mainTransfomer(
   node: ts.Node,
-  checker: ts.TypeChecker,
   context: ts.TransformationContext
-): ts.Node | undefined {
+): ts.Node | void {
   // Only consider exported function declarations
   if (!isNodeExported(node) || !ts.isFunctionDeclaration(node)) return
 
   // Define local environment
   context.locals = (node as any).locals
 
-  const symbol = node.name && checker.getSymbolAtLocation(node.name)
+  const symbol = node.name && context.typeChecker.getSymbolAtLocation(node.name)
   if (!symbol) return
 
   const comments = ts
-    .displayPartsToString(symbol.getDocumentationComment(checker))
+    .displayPartsToString(symbol.getDocumentationComment(context.typeChecker))
     .split(/\n(?!\s)/)
     .filter((c) => c.startsWith('$'))
 

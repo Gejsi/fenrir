@@ -14,25 +14,24 @@ export async function t1(firstParam: any, secondParam: any) {
             }
         ]
     }).promise();
-    return firstParam;
+    return 3;
 }
 /**
- * $Fixed
- * $TrackMetrics(namespace: "foo", metricName: "bar", metricValue: lok)
+ * $TrackMetrics(namespace: "foo", metricName: "bal", metricValue: lok)
  */
 export async function t2(firstParam: any, secondParam: any) {
+    const lok = 40;
     const _cloudwatch = new CloudWatch();
     await _cloudwatch.putMetricData({
         Namespace: "foo",
         MetricData: [
             {
-                MetricName: "bar",
+                MetricName: "bal",
                 Timestamp: new Date(),
                 Value: lok
             }
         ]
     }).promise();
-    const lok = 40;
-    const c = (x: number, y: number) => x + y;
-    return c;
+    const c = [1, 2];
+    return 2;
 }

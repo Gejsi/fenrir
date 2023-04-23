@@ -19,6 +19,8 @@ declare module 'typescript' {
      * (also needed for evaluation to check annotations correctness).
      */
     locals: Locals
+    /** TS default TypeChecker. Useful for working with symbols */
+    typeChecker: ts.TypeChecker
   }
 }
 

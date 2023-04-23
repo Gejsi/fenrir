@@ -125,6 +125,7 @@ function parseArguments<T extends AnnotationName>(
         prop.initializer,
         sourceFile
       ) as AnnotationArguments<T>[keyof AnnotationArguments<T>]
+
       args[key] = value
     }
   }
