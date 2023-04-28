@@ -3,7 +3,7 @@ import { transpile } from './transpile'
 console.log()
 
 transpile({
-  files: ['input/test.ts'],
+  files: ['input/metrics.ts'],
   serverlessConfigPath: 'input/serverless.yml',
   outputDirectory: 'output',
 })

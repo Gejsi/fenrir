@@ -1,10 +1,8 @@
-import { CloudWatch } from 'aws-sdk'
-
 /**
- * $TrackMetrics(namespace: "fio", metricName: "bar", metricValue: event.size)
  * $Fixed
+ * $TrackMetrics(namespace: "fio", metricName: "bar", metricValue: b)
  */
-export async function foo(event: any, context: any) {
+export async function foo(firstParam: any, secondParam: any) {
   const b = 1
   const bar = function () {
     const c = a + b
@@ -13,10 +11,13 @@ export async function foo(event: any, context: any) {
 }
 
 /**
+ * $TrackMetrics(namespace: "fio", metricName: "bar", metricValue: b)
  * $Fixed
- * $TrackMetrics(namespace: "fio", metricName: "bar", metricValue: event.size)
+ * $Fixed
+ * $TrackMetrics(namespace: "fio", metricName: "bar", metricValue: b)
+ * $Scheduled(rate: 'month')
  */
-export async function lok(event: any, context: any) {
+export async function lok(firstParam: any, secondParam: any) {
   const b = 1
   const bar = function () {
     const c = a + b

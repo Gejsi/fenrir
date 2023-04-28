@@ -1,13 +1,18 @@
 import ts from 'typescript'
 import { parse as parseFileName } from 'path'
 import type { Annotation } from '../annotations'
-import { buildEventStatementList, buildReturnExpression } from '../node'
+import {
+  buildEventStatementList,
+  buildReturnExpression,
+  isNodeReal,
+} from '../node'
 
 export function fixedTransfomer(
-  node: ts.FunctionDeclaration,
+  node: ts.FunctionDeclaration | undefined,
   context: ts.TransformationContext,
   annotation: Annotation<'Fixed'>
 ): ts.FunctionDeclaration | undefined {
+  if (!node) return
   const nodeName = node.name?.getText()
   if (!nodeName) return
 
@@ -15,8 +20,7 @@ export function fixedTransfomer(
 
   if (!details || !details.handler) {
     context.slsFunctionDetails.set(nodeName, {
-      handler:
-        parseFileName(node.getSourceFile().fileName).name + '.' + nodeName,
+      handler: parseFileName(context.sourceFile.fileName).name + '.' + nodeName,
       ...annotation.args,
     })
   } else {
@@ -48,7 +52,8 @@ const updateFunction = (
   }
 
   ts.forEachChild(node, (currentNode) => {
-    if (ts.isParameter(currentNode)) functionNode.parameters.push(currentNode)
+    if (ts.isParameter(currentNode) && isNodeReal(currentNode))
+      functionNode.parameters.push(currentNode)
     else if (ts.isBlock(currentNode)) {
       functionNode.block = ts.visitEachChild(
         currentNode,
@@ -58,23 +63,23 @@ const updateFunction = (
     }
   })
 
-  const newParameters = [
-    ts.factory.createParameterDeclaration(undefined, undefined, 'event'),
-    ts.factory.createParameterDeclaration(undefined, undefined, 'context'),
-    ts.factory.createParameterDeclaration(undefined, undefined, 'callback'),
-  ]
-
   let newBlock = functionNode.block
   // if there are parameters to the function,
   // they should be mapped to the `event` cloud function parameter
   if (functionNode.parameters.length && functionNode.block?.statements) {
     const eventStatementList = buildEventStatementList(functionNode.parameters)
 
-    newBlock = ts.factory.createBlock(
-      [...eventStatementList, ...functionNode.block.statements],
-      true
-    )
+    newBlock = ts.factory.updateBlock(functionNode.block, [
+      ...eventStatementList,
+      ...functionNode.block.statements,
+    ])
   }
+
+  const newParameters = [
+    ts.factory.createParameterDeclaration(undefined, undefined, 'event'),
+    ts.factory.createParameterDeclaration(undefined, undefined, 'context'),
+    ts.factory.createParameterDeclaration(undefined, undefined, 'callback'),
+  ]
 
   return { parameters: newParameters, block: newBlock }
 }

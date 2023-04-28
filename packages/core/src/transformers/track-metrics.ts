@@ -1,17 +1,22 @@
 import ts from 'typescript'
 import { Annotation } from '../annotations'
-import { isNodeAsync } from '../node'
+import { isFunctionAsync, isNodeReal } from '../node'
 import { reportErrorAt } from '../report'
 
+// TODO: support named and default imports
 export function trackMetricsTransformer(
-  node: ts.FunctionDeclaration,
+  node: ts.FunctionDeclaration | undefined,
   context: ts.TransformationContext,
   annotation: Annotation<'TrackMetrics'>
 ): ts.SourceFile | undefined {
-  if (!isNodeAsync(node))
+  if (!node) return
+  const nodeName = node.name?.getText()
+  if (!nodeName) return
+
+  if (!isFunctionAsync(node))
     return reportErrorAt(
-      `'$${annotation.name}' must be async`,
-      node.name!.getText(),
+      `'$${annotation.name}' must be applied to an async function`,
+      nodeName,
       node
     )
 
@@ -22,7 +27,7 @@ export function trackMetricsTransformer(
   ) {
     return reportErrorAt(
       `'$${annotation.name}' must receive 'namespace' and 'metricName' as parameters`,
-      node.name!.getText(),
+      nodeName,
       node
     )
   }
@@ -33,7 +38,7 @@ export function trackMetricsTransformer(
   ) {
     return reportErrorAt(
       `'$${annotation.name}' must receive strings as values for 'namespace' and 'metricName' parameters`,
-      node.name!.getText(),
+      nodeName,
       node
     )
   }
@@ -42,7 +47,6 @@ export function trackMetricsTransformer(
     (annotation.args.metricValue as ts.Identifier)?.escapedText as string
   )
 
-  // TODO: maybe add support for literal numbers?
   if (
     annotation.args.metricValue &&
     (!ts.isIdentifier(annotation.args.metricValue) || !isLocal)
@@ -50,12 +54,12 @@ export function trackMetricsTransformer(
     let errorText = `'$${annotation.name}' can only receive an identifier as\na value for the 'metricValue' parameter like\n`
 
     for (const [localName] of context.locals) {
-      errorText += `'${localName}'` + ' | '
+      errorText += `'${localName}' | `
     }
 
     errorText = errorText.substring(0, errorText.length - 3) // - 3 removes the last " | " chars
 
-    return reportErrorAt(errorText, node.name!.getText(), node)
+    return reportErrorAt(errorText, nodeName, node)
   }
 
   const importSpecifier = 'aws-sdk'
@@ -82,14 +86,13 @@ export function trackMetricsTransformer(
   if (!context.imports.has(importSpecifier)) {
     context.imports.add(importSpecifier)
 
-    return ts.factory.updateSourceFile(node.getSourceFile(), [
+    return ts.factory.updateSourceFile(context.sourceFile, [
       importDeclaration,
       newFunction,
     ])
   }
 
-  // TODO: support named and default imports
-  return ts.factory.updateSourceFile(node.getSourceFile(), [newFunction])
+  return ts.factory.updateSourceFile(context.sourceFile, [newFunction])
 }
 
 function visitFunction(
@@ -181,16 +184,17 @@ function visitFunction(
     )
   )
 
-  // Define a new block for environment-aware block transformation
-  let newBlock: ts.Block | undefined
+  // Define a block for environment-aware block transformation
+  let awareBlock: ts.Block | undefined
 
   ts.forEachChild(node, (currentNode) => {
     if (ts.isBlock(currentNode)) {
-      newBlock = ts.visitEachChild(
+      awareBlock = ts.visitEachChild(
         currentNode,
         (childNode) => {
           if (
             ts.isVariableStatement(childNode) &&
+            isNodeReal(childNode) &&
             childNode.declarationList.declarations[0]?.name.getText() ===
               (annotation.args?.metricValue as ts.Identifier)?.escapedText
           ) {
@@ -205,7 +209,7 @@ function visitFunction(
   })
 
   // True if the statements were placed under an identifier (excluding function parameters)
-  const isAware = newBlock?.statements.length !== node.body?.statements.length
+  const isAware = awareBlock?.statements.length !== node.body?.statements.length
 
   return ts.factory.updateFunctionDeclaration(
     node, // node
@@ -216,7 +220,7 @@ function visitFunction(
     node.parameters, // parameters
     node.type, // returnType
     isAware
-      ? newBlock
+      ? awareBlock
       : ts.factory.updateBlock(node.body!, [
           varStatement,
           awaitedStatement,

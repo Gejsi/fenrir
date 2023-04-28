@@ -5,9 +5,31 @@ export const isNodeExported = (node: ts.Node): boolean => {
   return (modifierFlags & ts.ModifierFlags.Export) !== 0
 }
 
-export const isNodeAsync = (node: ts.FunctionDeclaration): boolean => {
+export const isFunctionAsync = (node: ts.FunctionDeclaration): boolean => {
   const modifierFlags = ts.getCombinedModifierFlags(node)
   return (modifierFlags & ts.ModifierFlags.Async) !== 0
+}
+
+/** Checks if the node has a real position in the AST */
+export const isNodeReal = (node: ts.Node | undefined): boolean => {
+  return node ? node.pos !== -1 : false
+}
+
+export function findFunctionInFile(
+  node: ts.SourceFile,
+  nodeName: string
+): ts.FunctionDeclaration | undefined {
+  let fn: ts.FunctionDeclaration | undefined
+
+  node.statements.find((statement) => {
+    if (
+      ts.isFunctionDeclaration(statement) &&
+      statement.name?.getText() === nodeName
+    )
+      fn = statement
+  })
+
+  return fn
 }
 
 /**
@@ -36,8 +58,6 @@ const buildJsonParseExpression = (
  * ```
  * // from
  * function foo(x: Type) {}
- * ```
- * ```
  * // into
  * function foo() {
  *   const first: Type = JSON.parse(event.x)
@@ -86,8 +106,6 @@ const buildJsonStringifyExpression = (
  * ```
  * // from
  * return x
- * ```
- * ```
  * // into
  * return {
  *  statusCode: 200,

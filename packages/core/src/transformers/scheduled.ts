@@ -4,10 +4,11 @@ import type { Annotation } from '../annotations'
 import { reportErrorAt } from '../report'
 
 export function scheduledTransfomer(
-  node: ts.FunctionDeclaration,
+  node: ts.FunctionDeclaration | undefined,
   context: ts.TransformationContext,
   annotation: Annotation<'Scheduled'>
 ): void {
+  if (!node) return
   const nodeName = node.name?.getText()
   if (!nodeName) return
 
@@ -25,8 +26,7 @@ export function scheduledTransfomer(
 
   if (!details || !details.handler) {
     context.slsFunctionDetails.set(nodeName, {
-      handler:
-        parseFileName(node.getSourceFile().fileName).name + '.' + nodeName,
+      handler: parseFileName(context.sourceFile.fileName).name + '.' + nodeName,
       events: [{ schedule: annotationArgs }],
     })
 

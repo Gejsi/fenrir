@@ -5,8 +5,7 @@ import {
   type AnnotationArguments,
   type AnnotationName,
 } from './annotations'
-import { reportErrorAt, reportSyntaxError } from './report'
-import { Locals } from './transpile'
+import { reportSyntaxError } from './report'
 
 /**
  * This regex uses a non-capturing group (?:...) and the | operator to match either a sequence
@@ -30,8 +29,7 @@ type Match =
 export function parseAnnotation(
   text: string,
   nodeName: string | undefined,
-  node: ts.FunctionDeclaration,
-  context: ts.TransformationContext
+  node: ts.FunctionDeclaration
 ): Annotation | undefined {
   const match = text.match(noteRegex) as Match
 
@@ -77,22 +75,12 @@ export function parseAnnotation(
 
   return {
     name: name as AnnotationName,
-    args: parseArguments(
-      name as AnnotationName,
-      argsText,
-      nodeName,
-      node,
-      context
-    ),
+    args: parseArguments(argsText),
   }
 }
 
 function parseArguments<T extends AnnotationName>(
-  annotationName: AnnotationName,
-  argsString: string | undefined,
-  nodeName: string | undefined,
-  node: ts.FunctionDeclaration,
-  context: ts.TransformationContext
+  argsString: string | undefined
 ): AnnotationArguments<T> | undefined {
   if (!argsString) return
 
@@ -139,7 +127,7 @@ function parseExpression(
   } else if (ts.isArrayLiteralExpression(expr)) {
     value = expr.elements.map((element) => parseExpression(element, sourceFile))
   } else if (ts.isObjectLiteralExpression(expr)) {
-    const tempValue: Record<string, any> = {}
+    const tempValue: Record<string, unknown> = {}
 
     for (const prop of expr.properties) {
       if (ts.isPropertyAssignment(prop)) {

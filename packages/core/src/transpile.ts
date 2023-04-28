@@ -19,8 +19,13 @@ declare module 'typescript' {
      * (also needed for evaluation to check annotations correctness).
      */
     locals: Locals
-    /** TS default TypeChecker. Useful for working with symbols */
+    /** The default typechecker of TypeScript. Useful for working with symbols. */
     typeChecker: ts.TypeChecker
+    /**
+     * Function nodes parent source file.
+     * Used for pipelining transformers as it is present in the AST.
+     */
+    sourceFile: ts.SourceFile
   }
 }
 

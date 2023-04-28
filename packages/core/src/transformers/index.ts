@@ -1,6 +1,6 @@
-import ts from 'typescript'
+import ts, { symbolName } from 'typescript'
 import { annotationNameEquals } from '../annotations'
-import { isNodeExported } from '../node'
+import { findFunctionInFile, isNodeExported } from '../node'
 import { parseAnnotation } from '../parse'
 import { trackMetricsTransformer } from './track-metrics'
 import { fixedTransfomer } from './fixed'
@@ -55,6 +55,8 @@ function mainTransfomer(
 
   // Define local environment
   context.locals = (node as any).locals
+  // Define the source file present in the AST
+  context.sourceFile = node.getSourceFile()
 
   const symbol = node.name && context.typeChecker.getSymbolAtLocation(node.name)
   if (!symbol) return
@@ -64,25 +66,25 @@ function mainTransfomer(
     .split(/\n(?!\s)/)
     .filter((c) => c.startsWith('$'))
 
-  let res: ts.Node | undefined
+  let res: ts.SourceFile | ts.FunctionDeclaration | undefined = node
 
   for (const comment of comments) {
-    const parsedAnnotation = parseAnnotation(
-      comment,
-      symbol.getName(),
-      node,
-      context
-    )
+    const parsedAnnotation = parseAnnotation(comment, symbol.getName(), node)
     if (!parsedAnnotation) continue
 
+    const pipedNode =
+      res && ts.isSourceFile(res)
+        ? findFunctionInFile(res, symbol.getName())
+        : res
+
     if (annotationNameEquals(parsedAnnotation, 'Fixed')) {
-      res = fixedTransfomer(node, context, parsedAnnotation)
+      res = fixedTransfomer(pipedNode, context, parsedAnnotation)
     } else if (annotationNameEquals(parsedAnnotation, 'TrackMetrics')) {
-      res = trackMetricsTransformer(node, context, parsedAnnotation)
+      res = trackMetricsTransformer(pipedNode, context, parsedAnnotation)
     } else if (annotationNameEquals(parsedAnnotation, 'HttpApi')) {
-      httpTransfomer(node, context, parsedAnnotation)
+      httpTransfomer(pipedNode, context, parsedAnnotation)
     } else if (annotationNameEquals(parsedAnnotation, 'Scheduled')) {
-      scheduledTransfomer(node, context, parsedAnnotation)
+      scheduledTransfomer(pipedNode, context, parsedAnnotation)
     }
   }
 
