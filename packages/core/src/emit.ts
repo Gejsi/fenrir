@@ -1,10 +1,8 @@
 import ts from 'typescript'
 import { basename } from 'path'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
-import type {
-  AwsFunctionHandler,
-  Serverless as ServerlessConfig,
-} from 'serverless/aws'
+import type { Serverless as ServerlessConfig } from 'serverless/aws'
+import { ServerlessConfigFunctions } from './transpile'
 
 export const emitFile = (
   outputDirectory: string,
@@ -28,7 +26,7 @@ export const emitFile = (
 export const emitServerlessConfig = (
   path: string,
   outputDirectory: string,
-  functionDetails: Map<string, AwsFunctionHandler> | undefined
+  functionDetails: ServerlessConfigFunctions | undefined
 ) => {
   const slsConfig = ts.sys.readFile(path)
 

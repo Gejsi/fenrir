@@ -9,7 +9,7 @@ type Second = {
 }
 
 /**
- * $Fixed(name: 2, foo: bar)
+ * $Fixed
  */
 export async function kol(
   first: First,
@@ -21,10 +21,7 @@ export async function kol(
   return [1, 2]
 }
 
-/**
- * $Ignored
- * ahahahhaha
- */
+/** $Fixed */
 export async function foo(
   first: First,
   half: Record<string, number>
@@ -39,7 +36,6 @@ console.log('test')
 
 /**
  * $Ignored
- * ahahahhaha
  */
 const a = console.log('test 2')
 

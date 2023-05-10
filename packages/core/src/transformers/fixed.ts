@@ -1,89 +1,103 @@
 import ts from 'typescript'
-import { isNodeExported } from '../node'
-import { visitAnonymousFunction, visitFunction } from '../visit'
 import { parse as parseFileName } from 'path'
-import { scanAnnotation } from '../scan'
-import { ServerlessConfigFunctions } from '../transpile'
+import type { Annotation } from '../annotations'
+import {
+  buildEventStatementList,
+  buildReturnExpression,
+  isNodeReal,
+} from '../node'
 
-export function transformFunction(
-  node: ts.Node,
-  checker: ts.TypeChecker,
+export function fixedTransfomer(
+  node: ts.FunctionDeclaration | undefined,
   context: ts.TransformationContext,
-  sourceFile: ts.SourceFile,
-  functionDetails: ServerlessConfigFunctions
-): ts.Node | undefined {
-  // Only consider exported nodes
-  if (!isNodeExported(node)) return
+  annotation: Annotation<'Fixed'>
+): ts.FunctionDeclaration | undefined {
+  if (!node) return
+  const nodeName = node.name?.getText()
+  if (!nodeName) return
 
-  // `isFunctionLike()` doesn't detect anonymous functions
-  // so variables must be visited as well
-  if (ts.isFunctionLike(node) || ts.isVariableStatement(node)) {
-    const currentNode =
-      node.kind === ts.SyntaxKind.VariableStatement
-        ? node.declarationList.declarations[0]
-        : node
-    if (!currentNode) return
+  const details = context.slsFunctionDetails.get(nodeName)
 
-    const symbol =
-      currentNode.name && checker.getSymbolAtLocation(currentNode.name)
-    if (!symbol) return
-
-    const comment = ts
-      .displayPartsToString(symbol.getDocumentationComment(checker))
-      .split('\n')[0]
-    if (!comment) return
-
-    const parsedAnnotation = scanAnnotation(
-      comment,
-      symbol.getName(),
-      currentNode
-    )
-    if (!parsedAnnotation || parsedAnnotation.name !== 'Fixed') return
-
-    // add function details that will be used for emitting `serverless.yml`
-    functionDetails.set(symbol.getName(), {
-      handler: parseFileName(sourceFile.fileName).name + '.' + symbol.getName(),
+  if (!details || !details.handler) {
+    context.slsFunctionDetails.set(nodeName, {
+      handler: parseFileName(context.sourceFile.fileName).name + '.' + nodeName,
+      ...annotation.args,
     })
-
-    // detect if this node is a normal function
-    const isFunction = currentNode.kind === ts.SyntaxKind.FunctionDeclaration
-    // detect if this variable is an anonymous function
-    const isAnonFunction =
-      currentNode.kind === ts.SyntaxKind.VariableDeclaration &&
-      ts.isFunctionLike(currentNode.initializer) &&
-      node.kind === ts.SyntaxKind.VariableStatement
-
-    if (isFunction) return visitFunction(currentNode, context)
-    else if (isAnonFunction)
-      return visitAnonymousFunction(node, currentNode, context)
+  } else {
+    context.slsFunctionDetails.set(nodeName, { ...details, ...annotation.args })
   }
+
+  return visitFunction(node, context)
 }
 
-export const fixedTransformer = (
-  checker: ts.TypeChecker,
-  functionDetails: ServerlessConfigFunctions
-) => {
-  const factory: ts.TransformerFactory<ts.SourceFile> = (context) => {
-    return (sourceFile) => {
-      const visitor: ts.Visitor = (node) => {
-        const res = transformFunction(
-          node,
-          checker,
-          context,
-          sourceFile,
-          functionDetails
-        )
+const updateFunctionBody: ts.Visitor = (node) => {
+  if (ts.isReturnStatement(node))
+    return ts.factory.updateReturnStatement(node, buildReturnExpression(node))
 
-        // if the function transformation was successful, return the new node...
-        if (res) return res
+  return node
+}
 
-        // ...otherwise, keep traversing the AST
-        return ts.visitEachChild(node, visitor, context)
-      }
+type FunctionNode = {
+  parameters: ts.ParameterDeclaration[]
+  block?: ts.Block
+}
 
-      return ts.visitNode(sourceFile, visitor)
-    }
+const updateFunction = (
+  node: ts.FunctionDeclaration,
+  context: ts.TransformationContext
+): FunctionNode => {
+  const functionNode: FunctionNode = {
+    parameters: [],
+    block: undefined,
   }
 
-  return factory
+  ts.forEachChild(node, (currentNode) => {
+    if (ts.isParameter(currentNode) && isNodeReal(currentNode))
+      functionNode.parameters.push(currentNode)
+    else if (ts.isBlock(currentNode)) {
+      functionNode.block = ts.visitEachChild(
+        currentNode,
+        updateFunctionBody,
+        context
+      )
+    }
+  })
+
+  let newBlock = functionNode.block
+  // if there are parameters to the function,
+  // they should be mapped to the `event` cloud function parameter
+  if (functionNode.parameters.length && functionNode.block?.statements) {
+    const eventStatementList = buildEventStatementList(functionNode.parameters)
+
+    newBlock = ts.factory.updateBlock(functionNode.block, [
+      ...eventStatementList,
+      ...functionNode.block.statements,
+    ])
+  }
+
+  const newParameters = [
+    ts.factory.createParameterDeclaration(undefined, undefined, 'event'),
+    ts.factory.createParameterDeclaration(undefined, undefined, 'context'),
+    ts.factory.createParameterDeclaration(undefined, undefined, 'callback'),
+  ]
+
+  return { parameters: newParameters, block: newBlock }
+}
+
+const visitFunction = (
+  node: ts.FunctionDeclaration,
+  context: ts.TransformationContext
+): ts.FunctionDeclaration => {
+  const { parameters, block } = updateFunction(node, context)
+
+  return ts.factory.updateFunctionDeclaration(
+    node, // node
+    ts.getModifiers(node), // modifiers
+    node.asteriskToken, // asteriskToken
+    node.name, // name
+    node.typeParameters, // typeParameters
+    parameters, // parameters
+    node.type, // returnType
+    block // block
+  )
 }

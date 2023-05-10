@@ -1,10 +1,33 @@
 import ts from 'typescript'
 import { emitFile, emitServerlessConfig } from './emit'
-import type { AwsFunctionHandler } from 'serverless/aws'
 import { superTransformer } from './transformers'
+import type { AwsFunctionHandler } from 'serverless/aws'
 import { reportDiagnostics } from './report'
 
 export type ServerlessConfigFunctions = Map<string, AwsFunctionHandler>
+export type SourceFileImports = Set<string>
+export type Locals = Map<string, ts.Symbol>
+
+declare module 'typescript' {
+  interface TransformationContext {
+    /** Metadata function details that will be used for emitting `serverless.yml`. */
+    slsFunctionDetails: ServerlessConfigFunctions
+    /** Imports needed for a source file. */
+    imports: SourceFileImports
+    /**
+     * Function nodes dependencies such as parameters and local variables
+     * (also needed for evaluation to check annotations correctness).
+     */
+    locals: Locals
+    /** The default typechecker of TypeScript. Useful for working with symbols. */
+    typeChecker: ts.TypeChecker
+    /**
+     * Function nodes parent source file.
+     * Used for pipelining transformers as it is present in the AST.
+     */
+    sourceFile: ts.SourceFile
+  }
+}
 
 type Options = {
   files: string[] | string
@@ -51,13 +74,11 @@ export function transpile({
   const checker = program.getTypeChecker()
   const functionDetails: ServerlessConfigFunctions = new Map()
 
-  const globalTransformer = superTransformer(checker, functionDetails)
-
   for (const sourceFile of program.getSourceFiles()) {
     if (!sourceFile.isDeclarationFile) {
       const { transformed: transformedSourceFiles, diagnostics } = ts.transform(
         sourceFile,
-        [globalTransformer]
+        [superTransformer(checker, functionDetails)]
       )
       const transformedSourceFile = transformedSourceFiles[0]
 
