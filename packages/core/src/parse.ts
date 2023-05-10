@@ -7,17 +7,8 @@ import {
 } from './annotations'
 import { reportSyntaxError } from './report'
 
-/**
- * This regex uses a non-capturing group (?:...) and the | operator to match either a sequence
- * of characters that are not parentheses, or a nested set of parentheses.
- * The nested set of parentheses is matched using a similar recursive pattern,
- * where either a sequence of characters that are not parentheses or
- * another set of parentheses that can be potentially nested inside the current set are matched.
- * The [^()]* part inside the nested parentheses matches any sequence of characters that are not parentheses,
- * and the \([^()]*\) part matches a set of parentheses with potentially nested parentheses inside.
- */
 const noteRegex =
-  /\$(?<name>\w+)\s*(?<args>\((?:[^()]*|\((?:[^()]*|\([^()]*\))*\))*\))?/d
+  /\$(?<name>\w+)\s*(?<args>(?:\(([^)(]*(?:\((?:[^)(]*\))*[^)(]*)*)\)))?/d
 
 type Match =
   | (RegExpMatchArray & {
@@ -55,8 +46,27 @@ export function parseAnnotation(
   // handles plain `$Note` case
   const isSimple = !text.includes('(') && !text.includes(')')
 
-  // catch args syntax errors
+  // catch brackets syntax errors
   if (!args && !isSimple) {
+    const [_, endPos] = match.indices.groups.name
+
+    nodeName &&
+      reportSyntaxError(
+        text,
+        endPos,
+        text.length - endPos,
+        'Invalid bracket',
+        nodeName,
+        node
+      )
+  }
+
+  // remove outer parentheses and trim whitespace
+  const argsText = args?.replace(/^\s*\(\s*|\s*\)\s*$/g, '')
+  const parsedArgs = parseArguments(argsText)
+
+  // catch args syntax errors
+  if (typeof parsedArgs === 'object' && Object.keys(parsedArgs).length === 0) {
     const [_, endPos] = match.indices.groups.name
 
     nodeName &&
@@ -70,12 +80,9 @@ export function parseAnnotation(
       )
   }
 
-  // remove outer parentheses and trim whitespace
-  const argsText = args?.replace(/^\s*\(\s*|\s*\)\s*$/g, '')
-
   return {
     name: name as AnnotationName,
-    args: parseArguments(argsText),
+    args: parsedArgs,
   }
 }
 

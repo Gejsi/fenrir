@@ -29,7 +29,7 @@ export const reportErrorAt = (
     .getLineAndCharacterOfPosition(node.getStart())
 
   let errorText = errorMessage + '\n'
-  errorText += `in function '${nodeName}' defined here:\n${filePath}:${
+  errorText += `in function '${nodeName}' defined here:\n--> ${filePath}:${
     line + 1
   }`
 

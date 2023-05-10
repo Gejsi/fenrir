@@ -19,17 +19,12 @@ export function findFunctionInFile(
   node: ts.SourceFile,
   nodeName: string
 ): ts.FunctionDeclaration | undefined {
-  let fn: ts.FunctionDeclaration | undefined
-
-  node.statements.find((statement) => {
-    if (
+  return node.statements.find((statement) => {
+    return (
       ts.isFunctionDeclaration(statement) &&
       statement.name?.getText() === nodeName
     )
-      fn = statement
-  })
-
-  return fn
+  }) as ts.FunctionDeclaration | undefined
 }
 
 /**
