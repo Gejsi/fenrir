@@ -1,5 +1,6 @@
 import ts from 'typescript'
 import { parse as parseFileName } from 'path'
+import { stringify as stringifyYaml } from 'yaml'
 
 export const reportSyntaxError = (
   text: string,
@@ -53,4 +54,21 @@ export const reportDiagnostics = (diagnostics: ts.DiagnosticWithLocation[]) => {
       console.log(message)
     }
   })
+}
+
+export const reportMissingServerlessConfig = (error: string) => {
+  let errorText = error + '\n'
+  errorText +=
+    'Please, provide a valid configuration file. You can use the following reference:\n\n'
+
+  errorText += stringifyYaml({
+    service: 'my-service-name',
+    provider: {
+      name: 'aws',
+      runtime: 'nodejs14.x',
+      region: 'us-east-1',
+    },
+  })
+
+  console.log(errorText)
 }

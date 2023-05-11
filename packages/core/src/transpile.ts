@@ -1,8 +1,8 @@
 import ts from 'typescript'
 import { emitFile, emitServerlessConfig } from './emit'
 import { superTransformer } from './transformers'
+import { reportDiagnostics, reportMissingServerlessConfig } from './report'
 import type { AwsFunctionHandler } from 'serverless/aws'
-import { reportDiagnostics } from './report'
 
 export type ServerlessConfigFunctions = Map<string, AwsFunctionHandler>
 export type SourceFileImports = Set<string>
@@ -23,13 +23,13 @@ declare module 'typescript' {
     typeChecker: ts.TypeChecker
     /**
      * Function nodes parent source file.
-     * Used for pipelining transformers as it is present in the AST.
+     * (used for pipelining transformers).
      */
     sourceFile: ts.SourceFile
   }
 }
 
-type Options = {
+type TranspilerOptions = {
   files: string[] | string
   serverlessConfigPath?: string
   outputDirectory?: string
@@ -39,7 +39,7 @@ export function transpile({
   files,
   serverlessConfigPath,
   outputDirectory = 'functions',
-}: Options) {
+}: TranspilerOptions) {
   const rootFiles = Array.isArray(files)
     ? files.filter(ts.sys.fileExists)
     : ts.sys.readDirectory(files)
@@ -53,21 +53,14 @@ export function transpile({
 
   if (!serverlessConfigPath) {
     if (Array.isArray(files)) {
-      console.log(
-        '`serverless.yml` configuration file has not been provided to the transpiler.'
+      reportMissingServerlessConfig(
+        'Since you are providing a list of files, a `serverless.yml` must \nbe provided to the transpiler to generate the needed metadata.'
       )
       return
     }
 
     // in this case `files` is a directory
-    const configFilePath = files + '/serverless.yml'
-
-    if (!configFilePath) {
-      console.log('Failed to load the `serverless.yml` configuration file.')
-      return
-    }
-
-    serverlessConfigPath = configFilePath
+    serverlessConfigPath = files + '/serverless.yml'
   }
 
   const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed })
@@ -75,20 +68,20 @@ export function transpile({
   const functionDetails: ServerlessConfigFunctions = new Map()
 
   for (const sourceFile of program.getSourceFiles()) {
-    if (!sourceFile.isDeclarationFile) {
-      const { transformed: transformedSourceFiles, diagnostics } = ts.transform(
-        sourceFile,
-        [superTransformer(checker, functionDetails)]
-      )
-      const transformedSourceFile = transformedSourceFiles[0]
+    if (sourceFile.isDeclarationFile) continue
 
-      if (transformedSourceFile) {
-        const transformedSourceCode = printer.printFile(transformedSourceFile)
-        emitFile(outputDirectory, transformedSourceFile, transformedSourceCode)
-      }
+    const { transformed: transformedSourceFiles, diagnostics } = ts.transform(
+      sourceFile,
+      [superTransformer(checker, functionDetails)]
+    )
+    const transformedSourceFile = transformedSourceFiles[0]
 
-      if (diagnostics?.length) reportDiagnostics(diagnostics)
+    if (transformedSourceFile) {
+      const transformedSourceCode = printer.printFile(transformedSourceFile)
+      emitFile(outputDirectory, transformedSourceFile, transformedSourceCode)
     }
+
+    if (diagnostics?.length) reportDiagnostics(diagnostics)
   }
 
   emitServerlessConfig(serverlessConfigPath, outputDirectory, functionDetails)

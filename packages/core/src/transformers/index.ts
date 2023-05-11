@@ -1,4 +1,4 @@
-import ts, { symbolName } from 'typescript'
+import ts from 'typescript'
 import { annotationNameEquals } from '../annotations'
 import { findFunctionInFile, isNodeExported } from '../node'
 import { parseAnnotation } from '../parse'
