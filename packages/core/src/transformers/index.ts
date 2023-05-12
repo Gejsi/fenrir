@@ -39,6 +39,8 @@ export function superTransformer(
 
         // if the function transformation was successful, return the new node
         if (res) return res
+
+        return node
       }
 
       return ts.visitNode(sourceFile, visitor)

@@ -1,4 +1,5 @@
 import ts from 'typescript'
+import { extname } from 'path'
 import { emitFile, emitServerlessConfig } from './emit'
 import { superTransformer } from './transformers'
 import { reportDiagnostics, reportMissingServerlessConfig } from './report'
@@ -35,11 +36,19 @@ type TranspilerOptions = {
   outputDirectory?: string
 }
 
-export function transpile({
-  files,
-  serverlessConfigPath,
-  outputDirectory = 'functions',
-}: TranspilerOptions) {
+export function transpile(configPath: string) {
+  const configSource = ts.sys.readFile(configPath)
+
+  if (!configSource) {
+    console.error(
+      'No configuration file was provided. Please, create a file like `fenrir.config.json`'
+    )
+    return
+  }
+
+  let { files, serverlessConfigPath, outputDirectory }: TranspilerOptions =
+    JSON.parse(configSource)
+
   const rootFiles = Array.isArray(files)
     ? files.filter(ts.sys.fileExists)
     : ts.sys.readDirectory(files)
@@ -47,7 +56,7 @@ export function transpile({
   const program = ts.createProgram(rootFiles, { allowJs: true })
 
   if (!program.getSourceFiles().length) {
-    console.log('Input files have not been provided to the transpiler.')
+    console.error('Input files have not been provided to the transpiler.')
     return
   }
 
@@ -62,6 +71,8 @@ export function transpile({
     // in this case `files` is a directory
     serverlessConfigPath = files + '/serverless.yml'
   }
+
+  if (!outputDirectory) outputDirectory = 'functions'
 
   const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed })
   const checker = program.getTypeChecker()
