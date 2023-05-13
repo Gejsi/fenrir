@@ -1,5 +1,4 @@
 import ts from 'typescript'
-import { extname } from 'path'
 import { emitFile, emitServerlessConfig } from './emit'
 import { superTransformer } from './transformers'
 import { reportDiagnostics, reportMissingServerlessConfig } from './report'

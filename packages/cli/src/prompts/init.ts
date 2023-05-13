@@ -1,8 +1,7 @@
 import * as prompt from '@clack/prompts'
-import { setTimeout } from 'node:timers/promises'
 import color from 'ansi-colors'
 import { extname } from 'path'
-import transpile from 'fenrir-core'
+import { writeFileSync } from 'fs'
 
 export const init = async () => {
   console.clear()
@@ -30,11 +29,17 @@ export const init = async () => {
               return 'Only YAML files are supported.'
           },
         }),
-      outputPath: () =>
+      outputDirectory: () =>
         prompt.text({
           message:
             "How should the generated folder be named? (default: 'functions')",
           placeholder: 'output',
+        }),
+      configPath: () =>
+        prompt.text({
+          message:
+            'Where should `fenrir.config.json` be created? If empty, it will be placed in the current directory.',
+          placeholder: 'lambda',
         }),
     },
     {
@@ -45,18 +50,26 @@ export const init = async () => {
     }
   )
 
-  const s = prompt.spinner()
-  s.start('Transpiling some code...')
-  // transpile({
-  //   files: project.files,
-  //   serverlessConfigPath: project.slsPath,
-  //   outputDirectory: project.outputPath,
-  // })
-  s.stop('Finished transpiling and generated metadata.')
+  writeFileSync(
+    `${project.configPath ?? '.'}/fenrir.config.json`,
+    JSON.stringify(
+      {
+        files: project.files.includes(',')
+          ? project.files.split(',').map((f) => f.trim())
+          : project.files,
+        serverlessConfigPath: project.slsPath,
+        outputDirectory: project.outputDirectory,
+      },
+      null,
+      2
+    )
+  )
 
-  let nextSteps = `cd ${project.outputPath}        \n${
-    project.outputPath ? '' : 'pnpm install\n'
-  }pnpm dev`
+  let nextSteps = `// transpile your functions: '${project.files}'\n`
+  nextSteps += `> fen\n`
+  nextSteps += `// ...generates '${
+    project.outputDirectory ?? 'functions'
+  }' folder`
 
   prompt.note(nextSteps, 'Next steps.')
 

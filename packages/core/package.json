@@ -2,7 +2,7 @@
   "name": "fenrir-core",
   "scripts": {
     "build": "tsup src/index.ts --dts",
-    "dev": "tsx watch src/index.ts"
+    "dev": "tsx watch input/test.ts"
   },
   "type": "module",
   "main": "dist/index.js",
