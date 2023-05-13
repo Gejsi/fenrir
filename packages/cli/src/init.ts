@@ -2,11 +2,12 @@ import * as prompt from '@clack/prompts'
 import color from 'ansi-colors'
 import { extname } from 'path'
 import { writeFileSync } from 'fs'
+import { command } from 'cleye'
 
-export const init = async () => {
+const initPrompt = async () => {
   console.clear()
 
-  prompt.intro(`${color.bgCyan(color.black(' fenrir '))}`)
+  prompt.intro(`${color.bgCyan(color.black(' Fenrir '))}`)
 
   const project = await prompt.group(
     {
@@ -78,6 +79,21 @@ export const init = async () => {
       color.cyan('https://github.com/Gejsi/fenrir/issues')
     )}`
   )
-
-  return project
 }
+
+export const init = command(
+  {
+    name: 'init',
+    alias: 'i',
+
+    help: {
+      description: 'Initialize the transpiler with custom options',
+    },
+  },
+  () => {
+    initPrompt().catch((err) => {
+      console.error(err)
+      process.exit(1)
+    })
+  }
+)

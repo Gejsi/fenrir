@@ -4,6 +4,8 @@ node_modules
 .pnp.js
 .esbuild
 dist
+packages/cli/input
+packages/cli/output
 
 # testing
 coverage

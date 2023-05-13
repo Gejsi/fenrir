@@ -1,5 +1,0 @@
-{
-  "files": "input",
-  "serverlessConfigPath": "input/serverless.yml",
-  "outputDirectory": "output"
-}

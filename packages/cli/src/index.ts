@@ -1,6 +1,7 @@
 import { cli } from 'cleye'
 import { version } from '../package.json'
-import { init } from './prompts/init'
+import { init } from './init'
+import transpile from 'fenrir-core'
 
 const argv = cli({
   name: 'fen',
@@ -10,18 +11,23 @@ const argv = cli({
   },
 
   flags: {
-    init: {
-      type: Boolean,
-      alias: 'i',
-      description: 'Initialize the transpiler with custom options',
-      default: false,
+    generate: {
+      type: String,
+      alias: 'g',
+      description:
+        'Start transpiling by providing the folder which contains `fenrir.config.json`',
+      default: '.',
     },
   },
+
+  commands: [init],
 })
 
-if (argv.flags.init) {
-  init().catch((err) => {
-    console.error(err)
+if (!argv.command) {
+  if (argv.flags.generate) {
+    transpile(`${argv.flags.generate}/fenrir.config.json`)
+  } else {
+    console.error('Please provide a valide folder for the `--generate` flag.')
     process.exit(1)
-  })
+  }
 }
