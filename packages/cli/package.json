@@ -13,7 +13,8 @@
   },
   "scripts": {
     "build": "tsup src/index.ts --watch",
-    "dev": "node dist/index.js"
+    "dev": "node dist/index.js",
+    "lint": "eslint \"**/*.ts*\""
   },
   "author": "Gejsi <vgejsi@gmail.com>",
   "license": "MIT",
@@ -27,6 +28,7 @@
   },
   "devDependencies": {
     "@types/node": "^18.11.18",
+    "eslint-config-custom": "workspace:*",
     "tsconfig": "workspace:*",
     "tsup": "^6.5.0"
   },

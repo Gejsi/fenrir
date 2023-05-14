@@ -27,7 +27,7 @@ if (!argv.command) {
   if (argv.flags.generate) {
     transpile(`${argv.flags.generate}/fenrir.config.json`)
   } else {
-    console.error('Please provide a valide folder for the `--generate` flag.')
+    console.error('Please provide a valid folder for the `--generate` flag.')
     process.exit(1)
   }
 }

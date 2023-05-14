@@ -40,10 +40,10 @@ export const reportErrorAt = (
 
 export const reportDiagnostics = (diagnostics: ts.DiagnosticWithLocation[]) => {
   diagnostics.forEach((diagnostic) => {
-    let message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')
+    const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')
 
     if (diagnostic.file) {
-      let { line, character } = ts.getLineAndCharacterOfPosition(
+      const { line, character } = ts.getLineAndCharacterOfPosition(
         diagnostic.file,
         diagnostic.start!
       )
