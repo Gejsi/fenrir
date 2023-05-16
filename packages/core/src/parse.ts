@@ -8,7 +8,8 @@ import {
 import { reportSyntaxError } from './report'
 
 const noteRegex =
-  /\$(?<name>\w+)\s*(?<args>(?:\(([^)(]*(?:\((?:[^)(]*\))*[^)(]*)*)\)))?/d
+  // eslint-disable-next-line no-empty-character-class
+  /\$(?<name>\w+)\s*(?:\((?<args>[^)(]*(?:\((?:[^)(]*\))*[^)(]*)*)\))?/d
 
 type Match =
   | (RegExpMatchArray & {
@@ -48,7 +49,7 @@ export function parseAnnotation(
 
   // catch brackets syntax errors
   if (!args && !isSimple) {
-    const [_, endPos] = match.indices.groups.name
+    const [, endPos] = match.indices.groups.name
 
     nodeName &&
       reportSyntaxError(
@@ -67,7 +68,7 @@ export function parseAnnotation(
 
   // catch args syntax errors
   if (typeof parsedArgs === 'object' && Object.keys(parsedArgs).length === 0) {
-    const [_, endPos] = match.indices.groups.name
+    const [, endPos] = match.indices.groups.name
 
     nodeName &&
       reportSyntaxError(

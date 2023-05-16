@@ -1,0 +1,7 @@
+{
+  "subject": "Hello World",
+  "sender": "john.doe@example.com",
+  "receiver": "jane.smith@example.com",
+  "timestamp": "2023-05-01T10:30:00Z",
+  "message": "Hello,\n\nI wanted to share some links with you. Here are a few:\n\n1. Visit our website: https://www.example.com\n2. Check out our latest blog post: https://www.example.com/blog/latest\n3. Follow us on Twitter: https://twitter.com/example\n\nFeel free to explore these links. Let me know if you have any questions.\n\nBest regards,\nJohn"
+}

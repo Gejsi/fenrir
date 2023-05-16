@@ -45,6 +45,7 @@ export function transpile(configPath: string) {
     return
   }
 
+  // eslint-disable-next-line prefer-const
   let { files, serverlessConfigPath, outputDirectory }: TranspilerOptions =
     JSON.parse(configSource)
 
@@ -78,7 +79,11 @@ export function transpile(configPath: string) {
   const functionDetails: ServerlessConfigFunctions = new Map()
 
   for (const sourceFile of program.getSourceFiles()) {
-    if (sourceFile.isDeclarationFile) continue
+    if (
+      sourceFile.isDeclarationFile ||
+      !rootFiles.includes(sourceFile.fileName)
+    )
+      continue
 
     const { transformed: transformedSourceFiles, diagnostics } = ts.transform(
       sourceFile,

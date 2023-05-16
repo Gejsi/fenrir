@@ -1,7 +1,7 @@
 org: gejsi
-app: funx
-service: funx
-frameworkVersion: "3"
+app: hati
+service: hati
+frameworkVersion: '3'
 provider:
   name: aws
   runtime: nodejs14.x
@@ -13,7 +13,7 @@ provider:
       Action:
         - lambda:InvokeFunction
         - lambda:InvokeAsync
-      Resource: "*"
+      Resource: '*'
 functions:
   hi:
     handler: hello.hi

@@ -1,6 +1,6 @@
 <h1 align='center'>Fenrir</h1>
 
-This project is a monorepo still under development.
+A transpiler that simplifies the development of serverless functions.
 
 ---
 
@@ -20,17 +20,17 @@ Bundle into a `dist` folder:
 $ turbo run build --filter core
 ```
 
-### Apps - funx
+### Apps - hati
 
 Contains example cloud functions.
 To run them from the root of the project, firstly start the offline server:
 
 ```console
-$ pnpm -F funx serve
+$ pnpm -F hati serve
 ```
 
 Then invoke a function on another console.
 
 ```console
-$ pnpm -F funx hello
+$ pnpm -F hati hello
 ```

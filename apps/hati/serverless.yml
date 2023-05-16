@@ -1,6 +1,6 @@
 org: gejsi
-app: funx
-service: funx
+app: hati
+service: hati
 
 frameworkVersion: '3'
 
@@ -14,10 +14,6 @@ provider:
         - lambda:InvokeFunction
         - lambda:InvokeAsync
       Resource: '*'
-
-functions:
-  hello:
-    handler: hello.greet
 
 plugins:
   - serverless-offline

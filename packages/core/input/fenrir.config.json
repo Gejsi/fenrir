@@ -1,3 +1,4 @@
 {
-  "files": "input"
+  "files": "input",
+  "serverlessConfigPath": "input/serverless.yml"
 }

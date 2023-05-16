@@ -1,6 +1,6 @@
 org: gejsi
-app: funx
-service: funx
+app: hati
+service: hati
 
 frameworkVersion: '3'
 

@@ -1,0 +1,23 @@
+{
+  "name": "hati",
+  "scripts": {
+    "lint": "eslint \"**/*.ts*\"",
+    "serve": "serverless offline start",
+    "hello": "serverless invoke local -f hello",
+    "dev": "tsx watch input/index.ts",
+    "start": "tsx input/index.ts"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "aws-sdk": "^2.1257.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.11.18",
+    "esbuild": "^0.17.19",
+    "eslint-config-custom": "workspace:*",
+    "serverless": "^3.26.0",
+    "serverless-esbuild": "^1.44.0",
+    "serverless-offline": "^11.6.0",
+    "tsx": "^3.12.2"
+  }
+}

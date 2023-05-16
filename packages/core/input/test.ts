@@ -1,5 +1,5 @@
 import { transpile } from '../src/transpile'
 
 console.log()
-transpile('input/nrir.config.json')
+transpile('input/fenrir.config.json')
 console.log('Finished transpiling')
