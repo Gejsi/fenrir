@@ -1,4 +1,4 @@
-type Email = {
+export type Email = {
   subject: string
   sender: string
   receiver: string

@@ -9,10 +9,12 @@
   },
   "license": "MIT",
   "dependencies": {
-    "aws-sdk": "^2.1257.0"
+    "aws-sdk": "^2.1257.0",
+    "sentiment": "^5.0.2"
   },
   "devDependencies": {
     "@types/node": "^18.11.18",
+    "@types/sentiment": "^5.0.1",
     "esbuild": "^0.17.19",
     "eslint-config-custom": "workspace:*",
     "serverless": "^3.26.0",

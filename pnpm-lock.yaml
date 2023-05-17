@@ -15,17 +15,21 @@ importers:
   apps/hati:
     specifiers:
       '@types/node': ^18.11.18
+      '@types/sentiment': ^5.0.1
       aws-sdk: ^2.1257.0
       esbuild: ^0.17.19
       eslint-config-custom: workspace:*
+      sentiment: ^5.0.2
       serverless: ^3.26.0
       serverless-esbuild: ^1.44.0
       serverless-offline: ^11.6.0
       tsx: ^3.12.2
     dependencies:
       aws-sdk: 2.1282.0
+      sentiment: 5.0.2
     devDependencies:
       '@types/node': 18.11.18
+      '@types/sentiment': 5.0.1
       esbuild: 0.17.19
       eslint-config-custom: link:../../packages/eslint-config-custom
       serverless: 3.26.0
@@ -1572,6 +1576,10 @@ packages:
   /@types/semver/7.3.13:
     resolution: {integrity: sha512-21cFJr9z3g5dW8B0CVI9g2O9beqaThGQ6ZFBqHfwhzLDKUxaqTIy3vnfah/UPkfOiF2pLq+tGz+W8RyCskuslw==}
     dev: false
+
+  /@types/sentiment/5.0.1:
+    resolution: {integrity: sha512-EDqF8DFWaVVlEUZ35y+4B3dxI7JCKj0l35umQzi1NksqEihFexvGiMTE7Jd/R7Ottc0eicfgjskWkuBcDQRuuQ==}
+    dev: true
 
   /@types/serverless/3.12.11:
     resolution: {integrity: sha512-2CCtHisSPvbaeJwV1fJ9ppdea7luQV7AKIlpndk/Br4gdDCCJ/BZ9xo/0GQxeE6ID82X3AyNVj2A454PnuIXEA==}
@@ -4933,6 +4941,11 @@ packages:
     hasBin: true
     dependencies:
       lru-cache: 6.0.0
+
+  /sentiment/5.0.2:
+    resolution: {integrity: sha512-ZeC3y0JsOYTdwujt5uOd7ILJNilbgFzUtg/LEG4wUv43LayFNLZ28ec8+Su+h3saHlJmIwYxBzfDHHZuiMA15g==}
+    engines: {node: '>=8.0'}
+    dev: false
 
   /serverless-esbuild/1.44.0_esbuild@0.17.19:
     resolution: {integrity: sha512-WtP2rkJ5D56mTUbdbDhGFrHEXaqM+hC3ujdqHPqg7EUi9gDxogUCZcCzcSmXir/KgfewYFzVtGQoLBNtGTBaGw==}
