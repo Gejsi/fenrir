@@ -1,4 +1,5 @@
 {
-  "files": "input",
-  "serverlessConfigPath": "input/serverless.yml"
+  "files": ["input/vanilla.js"],
+  "serverlessConfigPath": "input/serverless.yml",
+  "outputDirectory": "output"
 }

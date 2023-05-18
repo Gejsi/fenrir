@@ -4,6 +4,7 @@ import type { Annotation } from '../annotations'
 import {
   buildEventStatementList,
   buildReturnExpression,
+  isFunctionAsync,
   isNodeReal,
 } from '../node'
 
@@ -33,6 +34,40 @@ export function fixedTransfomer(
 const updateFunctionBody: ts.Visitor = (node) => {
   if (ts.isReturnStatement(node))
     return ts.factory.updateReturnStatement(node, buildReturnExpression(node))
+  else if (ts.isIfStatement(node)) {
+    const thenStatement = ts.visitNode(node.thenStatement, (outerNode) => {
+      if (ts.isBlock(outerNode)) {
+        let s: ts.Statement[] = []
+
+        ts.forEachChild(outerNode, (innerNode) => {
+          if (ts.isReturnStatement(innerNode))
+            s.push(
+              ts.factory.updateReturnStatement(
+                innerNode,
+                buildReturnExpression(innerNode)
+              )
+            )
+          else s.push(innerNode as ts.Statement)
+        })
+
+        return ts.factory.updateBlock(outerNode, s)
+      } else if (ts.isReturnStatement(outerNode)) {
+        return ts.factory.updateReturnStatement(
+          outerNode,
+          buildReturnExpression(outerNode)
+        )
+      }
+
+      return outerNode
+    })
+
+    return ts.factory.updateIfStatement(
+      node,
+      node.expression,
+      thenStatement,
+      node.elseStatement
+    )
+  }
 
   return node
 }
@@ -89,10 +124,16 @@ const visitFunction = (
   context: ts.TransformationContext
 ): ts.FunctionDeclaration => {
   const { parameters, block } = updateFunction(node, context)
+  const modifiers = ts.getModifiers(node)?.slice()
+  const asyncModifier = ts.factory.createModifiersFromModifierFlags(
+    ts.ModifierFlags.Async
+  )?.[0]
+
+  if (!isFunctionAsync(node) && asyncModifier) modifiers?.push(asyncModifier)
 
   return ts.factory.updateFunctionDeclaration(
     node, // node
-    ts.getModifiers(node), // modifiers
+    modifiers, // modifiers
     node.asteriskToken, // asteriskToken
     node.name, // name
     node.typeParameters, // typeParameters

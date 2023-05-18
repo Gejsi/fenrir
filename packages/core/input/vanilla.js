@@ -1,5 +1,22 @@
 /** $Fixed */
-export async function count() {
+export function count(p) {
+  if (p === false) {
+    console.log('something went wrong')
+    return
+  }
+
+  if (p === 1) return
+
+  if (p === 2) {
+    console.log('2')
+  }
+
+  console.log('foo')
+
+  const add = (a, b) => {
+    return a + b
+  }
+
   return 'count'
 }
 

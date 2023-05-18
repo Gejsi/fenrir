@@ -84,8 +84,30 @@ export const buildEventStatementList = (
  * Makes an expression like: `JSON.stringify(x)`
  */
 const buildJsonStringifyExpression = (
-  expression: ts.Expression
+  expression?: ts.Expression
 ): ts.Expression => {
+  // handle guard clauses
+  if (!expression) {
+    return ts.factory.createCallExpression(
+      ts.factory.createPropertyAccessExpression(
+        ts.factory.createIdentifier('JSON'),
+        ts.factory.createIdentifier('stringify')
+      ),
+      undefined,
+      [
+        ts.factory.createObjectLiteralExpression(
+          [
+            ts.factory.createPropertyAssignment(
+              ts.factory.createIdentifier('error'),
+              ts.factory.createStringLiteral('Invalid request.')
+            ),
+          ],
+          true
+        ),
+      ]
+    )
+  }
+
   return ts.factory.createCallExpression(
     ts.factory.createPropertyAccessExpression(
       ts.factory.createIdentifier('JSON'),
@@ -108,25 +130,18 @@ const buildJsonStringifyExpression = (
  * }
  * ```
  */
-// FIX: fix naked returns
 export const buildReturnExpression = (
   node: ts.ReturnStatement
 ): ts.ObjectLiteralExpression => {
   const statusCode = ts.factory.createPropertyAssignment(
     'statusCode',
-    ts.factory.createNumericLiteral(200)
+    ts.factory.createNumericLiteral(node.expression ? 200 : 400)
   )
 
-  const body =
-    node.expression &&
-    ts.factory.createPropertyAssignment(
-      'body',
-      buildJsonStringifyExpression(node.expression)
-    )
+  const body = ts.factory.createPropertyAssignment(
+    'body',
+    buildJsonStringifyExpression(node.expression)
+  )
 
-  const properties: ts.ObjectLiteralElementLike[] = []
-  properties.push(statusCode)
-  body && properties.push(body)
-
-  return ts.factory.createObjectLiteralExpression(properties, true)
+  return ts.factory.createObjectLiteralExpression([statusCode, body], true)
 }
