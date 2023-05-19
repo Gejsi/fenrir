@@ -1,6 +1,6 @@
 /** $Fixed */
-export async function count(event, context, callback) {
-    const p = JSON.parse(event.p);
+export async function count(event) {
+    const p = event;
     if (p === false) {
         console.log('something went wrong');
         return {

@@ -1,0 +1,24 @@
+org: gejsi
+app: hati
+service: hati
+frameworkVersion: "3"
+provider:
+  name: aws
+  runtime: nodejs14.x
+  region: eu-central-1
+  environment:
+    MY_SECRET: ${file(./config.${opt:stage, 'dev'}.json):CREDS}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - lambda:InvokeFunction
+        - lambda:InvokeAsync
+      Resource: "*"
+functions:
+  hi:
+    handler: hello.hi
+  hello:
+    handler: hello.greet
+plugins:
+  - serverless-offline
+  - serverless-esbuild

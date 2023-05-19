@@ -18,10 +18,16 @@ export function fixedTransfomer(
   if (!nodeName) return
 
   const details = context.slsFunctionDetails.get(nodeName)
+  const handler =
+    context.outputDirectory +
+    '/' +
+    parseFileName(context.sourceFile.fileName).name +
+    '.' +
+    nodeName
 
   if (!details || !details.handler) {
     context.slsFunctionDetails.set(nodeName, {
-      handler: parseFileName(context.sourceFile.fileName).name + '.' + nodeName,
+      handler,
       ...annotation.args,
     })
   } else {
@@ -112,8 +118,6 @@ const updateFunction = (
 
   const newParameters = [
     ts.factory.createParameterDeclaration(undefined, undefined, 'event'),
-    ts.factory.createParameterDeclaration(undefined, undefined, 'context'),
-    ts.factory.createParameterDeclaration(undefined, undefined, 'callback'),
   ]
 
   return { parameters: newParameters, block: newBlock }

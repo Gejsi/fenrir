@@ -11,11 +11,13 @@ import type { ServerlessConfigFunctions } from '../transpile'
 /** This transformer maps all sub-transformers */
 export function superTransformer(
   checker: ts.TypeChecker,
-  functionDetails: ServerlessConfigFunctions
+  functionDetails: ServerlessConfigFunctions,
+  outputDirectory: string
 ): ts.TransformerFactory<ts.SourceFile> {
   return (context) => {
     context.slsFunctionDetails = functionDetails
     context.typeChecker = checker
+    context.outputDirectory = outputDirectory
 
     return (sourceFile) => {
       context.imports = new Set()

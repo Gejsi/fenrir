@@ -17,6 +17,7 @@ const extractLinksFromMessage = (message: string): string[] => {
   return matches || []
 }
 
+/** $Fixed */
 export function read(email: Partial<Email>) {
   if (
     !email ||
@@ -25,16 +26,22 @@ export function read(email: Partial<Email>) {
     !email.receiver ||
     !email.timestamp ||
     !email.message
-  )
-    throw new Error(
-      'Missing some email data. Please, check the email you provided.'
-    )
+  ) {
+    // throw new Error(
+    //   'Missing some email data. Please, check the email you provided.'
+    // )
+    return
+  }
 
-  if (!isValidEmailAddress(email.sender))
-    throw new Error('The provided `sender` address is not a valid email.')
+  if (!isValidEmailAddress(email.sender)) {
+    // throw new Error('The provided `sender` address is not a valid email.')
+    return
+  }
 
-  if (!isValidEmailAddress(email.receiver))
-    throw new Error('The provided `receiver` address is not a valid email.')
+  if (!isValidEmailAddress(email.receiver)) {
+    // throw new Error('The provided `receiver` address is not a valid email.')
+    return
+  }
 
   const parsedEmail = {
     ...email,

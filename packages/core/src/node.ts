@@ -28,34 +28,13 @@ export function findFunctionInFile(
 }
 
 /**
- * Makes an expression like: `JSON.parse(event.x)`
- */
-const buildJsonParseExpression = (
-  parameterName: ts.BindingName
-): ts.Expression => {
-  return ts.factory.createCallExpression(
-    ts.factory.createPropertyAccessExpression(
-      ts.factory.createIdentifier('JSON'), // expression
-      ts.factory.createIdentifier('parse') // memberName
-    ),
-    undefined, // typeArguments
-    [
-      ts.factory.createPropertyAccessExpression(
-        ts.factory.createIdentifier('event'), // expression
-        ts.factory.createIdentifier(parameterName.getText()) // memberName
-      ),
-    ]
-  )
-}
-
-/**
  * Transforms function parameters into property-access expressions:
  * ```
  * // from
  * function foo(x: Type) {}
  * // into
  * function foo() {
- *   const first: Type = JSON.parse(event.x)
+ *   const first: Type = event.x
  * }
  * ```
  */
@@ -71,7 +50,7 @@ export const buildEventStatementList = (
             ts.factory.createIdentifier(parameter.name.getText()), // name
             undefined, // exclamation token
             parameter.type, // type
-            buildJsonParseExpression(parameter.name) // initializer
+            ts.factory.createIdentifier('event') // initializer
           ),
         ],
         ts.NodeFlags.Const

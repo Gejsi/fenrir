@@ -1,11 +1,11 @@
 {
   "name": "hati",
   "scripts": {
-    "lint": "eslint \"**/*.ts*\"",
+    "format": "prettier --write \"output/*.{ts,js}\"",
+    "lint": "eslint \"output/*.{ts,js}*\"",
     "serve": "serverless offline start",
-    "hello": "serverless invoke local -f hello",
-    "dev": "tsx watch input/index.ts",
-    "start": "tsx input/index.ts"
+    "full:dev": "tsx src/full.ts",
+    "less:dev": "tsx src/less.ts"
   },
   "license": "MIT",
   "dependencies": {
@@ -17,6 +17,7 @@
     "@types/sentiment": "^5.0.1",
     "esbuild": "^0.17.19",
     "eslint-config-custom": "workspace:*",
+    "fenrir": "workspace:*",
     "serverless": "^3.26.0",
     "serverless-esbuild": "^1.44.0",
     "serverless-offline": "^11.6.0",

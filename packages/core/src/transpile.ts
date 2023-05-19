@@ -12,6 +12,8 @@ declare module 'typescript' {
   interface TransformationContext {
     /** Metadata function details that will be used for emitting `serverless.yml`. */
     slsFunctionDetails: ServerlessConfigFunctions
+    /** Metadata output directory that will be used for emitting `serverless.yml`. */
+    outputDirectory: string
     /** Imports needed for a source file. */
     imports: SourceFileImports
     /**
@@ -87,7 +89,7 @@ export function transpile(configPath: string) {
 
     const { transformed: transformedSourceFiles, diagnostics } = ts.transform(
       sourceFile,
-      [superTransformer(checker, functionDetails)]
+      [superTransformer(checker, functionDetails, outputDirectory)]
     )
     const transformedSourceFile = transformedSourceFiles[0]
 
@@ -99,5 +101,5 @@ export function transpile(configPath: string) {
     if (diagnostics?.length) reportDiagnostics(diagnostics)
   }
 
-  emitServerlessConfig(serverlessConfigPath, outputDirectory, functionDetails)
+  emitServerlessConfig(serverlessConfigPath, functionDetails)
 }

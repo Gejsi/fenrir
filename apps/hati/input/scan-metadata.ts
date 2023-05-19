@@ -14,16 +14,17 @@ type Link = NonNullable<Unpacked<Links>>
 
 type MetadataRecord = Record<Link, Metadata>
 
+/** $Fixed */
 export async function scanMetadata(links: Links) {
   if (!links || !links.length) return
 
   const metadata: MetadataRecord = {}
 
-  for (let link of links) {
+  for (const link of links) {
     const res = await fetch(link)
     const contentType = res.headers.get('content-type')
     const contentLength = res.headers.get('content-length')
-    let body = await res.text()
+    const body = await res.text()
 
     metadata[link] = {
       'content-type': contentType ?? undefined,

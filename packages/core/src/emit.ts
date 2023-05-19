@@ -26,7 +26,6 @@ export const emitFile = (
 
 export const emitServerlessConfig = (
   path: string,
-  outputDirectory: string,
   functionDetails: ServerlessConfigFunctions | undefined
 ): void => {
   const slsConfig = ts.sys.readFile(path)
@@ -47,5 +46,5 @@ export const emitServerlessConfig = (
 
   const transformedConfig = stringifyYaml(parsedConfig)
 
-  ts.sys.writeFile(`${outputDirectory}/serverless.yml`, transformedConfig)
+  ts.sys.writeFile(`serverless.yml`, transformedConfig)
 }

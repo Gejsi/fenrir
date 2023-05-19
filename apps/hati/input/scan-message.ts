@@ -6,14 +6,15 @@ type Message = {
   sentiment: Pick<AnalysisResult, 'score' | 'positive' | 'negative'>
 }
 
-export function scanMessage(message: Email['message']): Message {
+/** $Fixed */
+export function scanMessage(message: Email['message']) {
   const words = message
     .split(/(\s+|\n+|^@[^\s]+)/)
     .filter((word) => word.trim() !== '')
 
   const mentions: Message['mentions'] = []
 
-  for (let word of words) {
+  for (const word of words) {
     if (word.match(/@\w+/g)) {
       // remove trailing punctuation
       const cleanMention = word.replace(/[^\w]+$/, '')

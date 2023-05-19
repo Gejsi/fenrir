@@ -23,10 +23,16 @@ export function httpTransfomer(
   }
 
   const details = context.slsFunctionDetails.get(nodeName)
+  const handler =
+    context.outputDirectory +
+    '/' +
+    parseFileName(context.sourceFile.fileName).name +
+    '.' +
+    nodeName
 
   if (!details || !details.handler) {
     context.slsFunctionDetails.set(nodeName, {
-      handler: parseFileName(context.sourceFile.fileName).name + '.' + nodeName,
+      handler,
       events: [{ httpApi: annotationArgs }],
     })
 
