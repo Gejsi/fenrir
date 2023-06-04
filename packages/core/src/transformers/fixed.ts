@@ -1,12 +1,7 @@
 import ts from 'typescript'
 import { parse as parseFileName } from 'path'
 import type { Annotation } from '../annotations'
-import {
-  buildEventStatementList,
-  buildReturnExpression,
-  isFunctionAsync,
-  isNodeReal,
-} from '../node'
+import { isFunctionAsync, isNodeReal } from '../node'
 
 export function fixedTransfomer(
   node: ts.FunctionDeclaration | undefined,
@@ -43,7 +38,7 @@ const updateFunctionBody: ts.Visitor = (node) => {
   else if (ts.isIfStatement(node)) {
     const thenStatement = ts.visitNode(node.thenStatement, (outerNode) => {
       if (ts.isBlock(outerNode)) {
-        let s: ts.Statement[] = []
+        const s: ts.Statement[] = []
 
         ts.forEachChild(outerNode, (innerNode) => {
           if (ts.isReturnStatement(innerNode))
@@ -145,4 +140,100 @@ const visitFunction = (
     node.type, // returnType
     block // block
   )
+}
+
+/**
+ * Transforms function parameters into property-access expressions:
+ * ```
+ * // from
+ * function foo(x: Type) {}
+ * // into
+ * function foo() {
+ *   const first: Type = event.x
+ * }
+ * ```
+ */
+const buildEventStatementList = (parameters: ts.ParameterDeclaration[]) => {
+  return parameters.map((parameter) => {
+    return ts.factory.createVariableStatement(
+      undefined, // modifiers
+      ts.factory.createVariableDeclarationList(
+        [
+          ts.factory.createVariableDeclaration(
+            ts.factory.createIdentifier(parameter.name.getText()), // name
+            undefined, // exclamation token
+            parameter.type, // type
+            ts.factory.createIdentifier('event') // initializer
+          ),
+        ],
+        ts.NodeFlags.Const
+      )
+    )
+  })
+}
+
+/**
+ * Makes an expression like: `JSON.stringify(x)`
+ */
+const buildJsonStringifyExpression = (
+  expression?: ts.Expression
+): ts.Expression => {
+  // handle guard clauses
+  if (!expression) {
+    return ts.factory.createCallExpression(
+      ts.factory.createPropertyAccessExpression(
+        ts.factory.createIdentifier('JSON'),
+        ts.factory.createIdentifier('stringify')
+      ),
+      undefined,
+      [
+        ts.factory.createObjectLiteralExpression(
+          [
+            ts.factory.createPropertyAssignment(
+              ts.factory.createIdentifier('error'),
+              ts.factory.createStringLiteral('Invalid request.')
+            ),
+          ],
+          true
+        ),
+      ]
+    )
+  }
+
+  return ts.factory.createCallExpression(
+    ts.factory.createPropertyAccessExpression(
+      ts.factory.createIdentifier('JSON'),
+      ts.factory.createIdentifier('stringify')
+    ),
+    undefined,
+    [expression]
+  )
+}
+
+/**
+ * Transforms return statements into object-literals:
+ * ```
+ * // from
+ * return x
+ * // into
+ * return {
+ *  statusCode: 200,
+ *  body: JSON.stringify(x)
+ * }
+ * ```
+ */
+const buildReturnExpression = (
+  node: ts.ReturnStatement
+): ts.ObjectLiteralExpression => {
+  const statusCode = ts.factory.createPropertyAssignment(
+    'statusCode',
+    ts.factory.createNumericLiteral(node.expression ? 200 : 400)
+  )
+
+  const body = ts.factory.createPropertyAssignment(
+    'body',
+    buildJsonStringifyExpression(node.expression)
+  )
+
+  return ts.factory.createObjectLiteralExpression([statusCode, body], true)
 }

@@ -6,6 +6,7 @@ import {
   type AnnotationName,
 } from './annotations'
 import { reportSyntaxError } from './report'
+import type { CustomAnnotations } from './transpile'
 
 const noteRegex =
   // eslint-disable-next-line no-empty-character-class
@@ -21,7 +22,8 @@ type Match =
 export function parseAnnotation(
   text: string,
   nodeName: string | undefined,
-  node: ts.FunctionDeclaration
+  node: ts.FunctionDeclaration,
+  customAnnotations: CustomAnnotations
 ): Annotation | undefined {
   const match = text.match(noteRegex) as Match
 
@@ -30,7 +32,7 @@ export function parseAnnotation(
   const { name, args } = match.groups
 
   // catch name syntax errors
-  if (!name || !(name in ANNOTATIONS)) {
+  if (!name || (!(name in ANNOTATIONS) && !(name in customAnnotations))) {
     const [startPos, endPos] = match.indices.groups.name
 
     nodeName &&

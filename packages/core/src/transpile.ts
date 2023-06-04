@@ -7,6 +7,7 @@ import type { AwsFunctionHandler } from 'serverless/aws'
 export type ServerlessConfigFunctions = Map<string, AwsFunctionHandler>
 export type SourceFileImports = Set<string>
 export type Locals = Map<string, ts.Symbol>
+export type CustomAnnotations = Record<string, any>
 
 declare module 'typescript' {
   interface TransformationContext {
@@ -14,19 +15,15 @@ declare module 'typescript' {
     slsFunctionDetails: ServerlessConfigFunctions
     /** Metadata output directory that will be used for emitting `serverless.yml`. */
     outputDirectory: string
-    /** Imports needed for a source file. */
+    /** Metadata output directory that will be used for emitting `serverless.yml`. */
+    customAnnotations: CustomAnnotations
+    /** Imports of a source file. */
     imports: SourceFileImports
-    /**
-     * Function nodes dependencies such as parameters and local variables
-     * (also needed for evaluation to check annotations correctness).
-     */
+    /** Function nodes dependencies such as parameters and local variables. */
     locals: Locals
     /** The default typechecker of TypeScript. Useful for working with symbols. */
     typeChecker: ts.TypeChecker
-    /**
-     * Function nodes parent source file.
-     * (used for pipelining transformers).
-     */
+    /** Function nodes parent source file (used for pipelining transformers). */
     sourceFile: ts.SourceFile
   }
 }
@@ -35,9 +32,10 @@ type TranspilerOptions = {
   files: string[] | string
   serverlessConfigPath?: string
   outputDirectory?: string
+  annotations?: Record<string, string>
 }
 
-export function transpile(configPath: string) {
+export async function transpile(configPath: string) {
   const configSource = ts.sys.readFile(configPath)
 
   if (!configSource) {
@@ -47,9 +45,14 @@ export function transpile(configPath: string) {
     return
   }
 
-  // eslint-disable-next-line prefer-const
-  let { files, serverlessConfigPath, outputDirectory }: TranspilerOptions =
-    JSON.parse(configSource)
+  /* eslint-disable prefer-const */
+  let {
+    files,
+    serverlessConfigPath,
+    outputDirectory,
+    annotations: customAnnotationsOption,
+  }: TranspilerOptions = JSON.parse(configSource)
+  /* eslint-enable */
 
   const rootFiles = Array.isArray(files)
     ? files.filter(ts.sys.fileExists)
@@ -76,6 +79,23 @@ export function transpile(configPath: string) {
 
   if (!outputDirectory) outputDirectory = 'functions'
 
+  const customAnnotations: CustomAnnotations = {}
+
+  if (customAnnotationsOption && Object.keys(customAnnotationsOption).length) {
+    for (const [annotationName, annotationSource] of Object.entries(
+      customAnnotationsOption
+    )) {
+      try {
+        const f = await import(ts.sys.resolvePath(annotationSource))
+        customAnnotations[annotationName] = f.default
+      } catch (error) {
+        console.error(
+          'Error while getting custom annotations.\nCheck if a default transformer has been properly exported as `default`.'
+        )
+      }
+    }
+  }
+
   const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed })
   const checker = program.getTypeChecker()
   const functionDetails: ServerlessConfigFunctions = new Map()
@@ -89,7 +109,14 @@ export function transpile(configPath: string) {
 
     const { transformed: transformedSourceFiles, diagnostics } = ts.transform(
       sourceFile,
-      [superTransformer(checker, functionDetails, outputDirectory)]
+      [
+        superTransformer(
+          checker,
+          functionDetails,
+          outputDirectory,
+          customAnnotations
+        ),
+      ]
     )
     const transformedSourceFile = transformedSourceFiles[0]
 
