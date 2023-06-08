@@ -5,9 +5,24 @@ import { reportDiagnostics, reportMissingServerlessConfig } from './report'
 import type { AwsFunctionHandler } from 'serverless/aws'
 
 export type ServerlessConfigFunctions = Map<string, AwsFunctionHandler>
+
 export type SourceFileImports = Set<string>
+
 export type Locals = Map<string, ts.Symbol>
-export type CustomAnnotations = Record<string, any>
+
+export type CustomTransformer<
+  TName extends string = '',
+  TArgs extends {} = {}
+> = (
+  node: ts.FunctionDeclaration | undefined,
+  context: ts.TransformationContext,
+  annotation: {
+    name: TName
+    args: TArgs
+  }
+) => ts.SourceFile | ts.FunctionDeclaration | undefined | void
+
+export type CustomAnnotations = Record<string, CustomTransformer>
 
 declare module 'typescript' {
   interface TransformationContext {
@@ -15,7 +30,7 @@ declare module 'typescript' {
     slsFunctionDetails: ServerlessConfigFunctions
     /** Metadata output directory that will be used for emitting `serverless.yml`. */
     outputDirectory: string
-    /** Metadata output directory that will be used for emitting `serverless.yml`. */
+    /** Record containing all custom annotations with their associated transformers. */
     customAnnotations: CustomAnnotations
     /** Imports of a source file. */
     imports: SourceFileImports
@@ -25,6 +40,8 @@ declare module 'typescript' {
     typeChecker: ts.TypeChecker
     /** Function nodes parent source file (used for pipelining transformers). */
     sourceFile: ts.SourceFile
+    /** Starting position of the node in the AST (used for pipelining transformers). */
+    nodeStartingPosition: number
   }
 }
 
@@ -90,7 +107,7 @@ export async function transpile(configPath: string) {
         customAnnotations[annotationName] = f.default
       } catch (error) {
         console.error(
-          'Error while getting custom annotations.\nCheck if a default transformer has been properly exported as `default`.'
+          'Error while importing custom annotations.\nCheck if a transformer has been properly exported as `default`.'
         )
       }
     }

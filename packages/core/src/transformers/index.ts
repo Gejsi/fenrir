@@ -6,7 +6,11 @@ import { trackMetricsTransformer } from './track-metrics'
 import { fixedTransfomer } from './fixed'
 import { httpTransfomer } from './http'
 import { scheduledTransfomer } from './scheduled'
-import type { CustomAnnotations, ServerlessConfigFunctions } from '../transpile'
+import type {
+  CustomAnnotations,
+  ServerlessConfigFunctions,
+  CustomTransformer,
+} from '../transpile'
 
 /** This transformer maps all sub-transformers */
 export function superTransformer(
@@ -63,6 +67,7 @@ function mainTransfomer(
   context.locals = (node as any).locals
   // Define the source file present in the AST
   context.sourceFile = node.getSourceFile()
+  context.nodeStartingPosition = node.getStart()
 
   const symbol = node.name && context.typeChecker.getSymbolAtLocation(node.name)
   if (!symbol) return
@@ -83,7 +88,7 @@ function mainTransfomer(
     )
     if (!parsedAnnotation) continue
 
-    const pipedNode =
+    const pipedNode: ts.FunctionDeclaration | undefined =
       res && ts.isSourceFile(res)
         ? findFunctionInFile(res, symbol.getName())
         : res
@@ -97,7 +102,15 @@ function mainTransfomer(
     } else if (annotationNameEquals(parsedAnnotation, 'Scheduled')) {
       scheduledTransfomer(pipedNode, context, parsedAnnotation)
     } else if (parsedAnnotation.name in context.customAnnotations) {
-      res = context.customAnnotations[parsedAnnotation.name]()
+      const customTransformer = context.customAnnotations[parsedAnnotation.name]
+
+      // `result` is used because transformers can also be `void`
+      const result: ReturnType<CustomTransformer> = customTransformer?.(
+        pipedNode,
+        context,
+        parsedAnnotation as any
+      )
+      if (result) res = result
     }
   }
 

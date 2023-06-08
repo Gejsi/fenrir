@@ -1,2 +1,7 @@
-/** $S3Bucket */
-export function foo() { }
+/**
+ * $Fixed
+ * $S3Bucket(vel: "lorem", fn: (a, b) => a + b)
+ */
+export async function foo(event) {
+    console.log('man');
+}

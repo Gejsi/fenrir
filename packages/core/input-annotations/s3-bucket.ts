@@ -1,8 +1,11 @@
-// import ts from 'typescript'
-// import { parse as parseFileName } from 'path'
-// import type { Annotation } from '../src/annotations'
-// import { reportErrorAt } from '../src/report'
+import type { CustomTransformer } from '../src/transpile'
 
-export default function (): void {
-  console.log('transforming...')
+const transformer: CustomTransformer<'S3Bucket', { foo: number }> = (
+  node,
+  context,
+  annotation
+) => {
+  console.log('transforming')
 }
+
+export default transformer
