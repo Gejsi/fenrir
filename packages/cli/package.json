@@ -1,7 +1,7 @@
 {
   "name": "fenrir",
   "version": "1.0.0",
-  "description": "A transpiler that simplifies the development of serverless functions.",
+  "description": "A CLI to interact with Fenrir.",
   "keywords": [
     "serverless",
     "transpiler"
@@ -9,10 +9,11 @@
   "main": "dist/index.js",
   "type": "module",
   "bin": {
-    "fen": "dist/index.js"
+    "fenrir": "dist/index.js"
   },
   "scripts": {
-    "build": "tsup src/index.ts --watch",
+    "build": "tsup src/index.ts",
+    "watch": "tsup src/index.ts --watch",
     "dev": "node dist/index.js",
     "lint": "eslint \"**/*.ts*\""
   },

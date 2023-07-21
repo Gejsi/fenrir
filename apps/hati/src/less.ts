@@ -6,7 +6,7 @@ const lambda = new Lambda({
   region: 'eu-central-1',
 })
 
-const retrieveContent = (payload: Lambda._Blob, content: any) => {
+const retrieveContent = (payload: Lambda._Blob, content: string) => {
   return JSON.stringify(
     JSON.parse(JSON.parse(payload.toString()).body)[content]
   )

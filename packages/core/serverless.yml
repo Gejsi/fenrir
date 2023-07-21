@@ -1,7 +1,7 @@
 org: gejsi
 app: hati
 service: hati
-frameworkVersion: "3"
+frameworkVersion: '3'
 provider:
   name: aws
   runtime: nodejs14.x
@@ -13,14 +13,24 @@ provider:
       Action:
         - lambda:InvokeFunction
         - lambda:InvokeAsync
-      Resource: "*"
+      Resource: '*'
 functions:
   hi:
     handler: hello.hi
   hello:
     handler: hello.greet
-  foo:
-    handler: output/custom.foo
+  # aa
+  processOrder:
+    handler: output/source.processOrder
+    events:
+      - httpApi:
+          method: GET
+          path: /orders/report
+  generateReport:
+    handler: output/source.generateReport
+    events:
+      - schedule:
+          rate: 2 hours
 plugins:
   - serverless-offline
   - serverless-esbuild

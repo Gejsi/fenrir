@@ -1,7 +1,3 @@
-/**
- * $Fixed
- * $S3Bucket(vel: "lorem", fn: (a, b) => a + b)
- */
+/** $S3Bucket */
 export function foo() {
-  console.log('man')
 }

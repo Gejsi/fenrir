@@ -6,7 +6,6 @@ import {
   type AnnotationName,
 } from './annotations'
 import { reportSyntaxError } from './report'
-import type { CustomAnnotations } from './transpile'
 
 const noteRegex =
   // eslint-disable-next-line no-empty-character-class
@@ -22,8 +21,7 @@ type Match =
 export function parseAnnotation(
   text: string,
   nodeName: string | undefined,
-  node: ts.FunctionDeclaration,
-  customAnnotations: CustomAnnotations
+  context: ts.TransformationContext
 ): Annotation | undefined {
   const match = text.match(noteRegex) as Match
 
@@ -32,7 +30,10 @@ export function parseAnnotation(
   const { name, args } = match.groups
 
   // catch name syntax errors
-  if (!name || (!(name in ANNOTATIONS) && !(name in customAnnotations))) {
+  if (
+    !name ||
+    (!(name in ANNOTATIONS) && !(name in context.customAnnotations))
+  ) {
     const [startPos, endPos] = match.indices.groups.name
 
     nodeName &&
@@ -42,7 +43,7 @@ export function parseAnnotation(
         endPos - startPos,
         'Unknown annotation name',
         nodeName,
-        node
+        context
       )
   }
 
@@ -60,7 +61,7 @@ export function parseAnnotation(
         text.length - endPos,
         'Invalid bracket',
         nodeName,
-        node
+        context
       )
   }
 
@@ -79,7 +80,7 @@ export function parseAnnotation(
         text.length - endPos,
         'Invalid syntax for annotation parameters',
         nodeName,
-        node
+        context
       )
   }
 

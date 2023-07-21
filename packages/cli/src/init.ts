@@ -67,7 +67,7 @@ const initPrompt = async () => {
   )
 
   let nextSteps = `// transpile your functions: '${project.files}'\n`
-  nextSteps += `> fen\n`
+  nextSteps += `> fenrir\n`
   nextSteps += `// ...generates '${
     project.outputDirectory ?? 'functions'
   }' folder`

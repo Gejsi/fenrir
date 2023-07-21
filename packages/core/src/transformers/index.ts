@@ -80,12 +80,7 @@ function mainTransfomer(
   let res: ts.SourceFile | ts.FunctionDeclaration | undefined = node
 
   for (const comment of comments) {
-    const parsedAnnotation = parseAnnotation(
-      comment,
-      symbol.getName(),
-      node,
-      context.customAnnotations
-    )
+    const parsedAnnotation = parseAnnotation(comment, symbol.getName(), context)
     if (!parsedAnnotation) continue
 
     const pipedNode: ts.FunctionDeclaration | undefined =

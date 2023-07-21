@@ -1,5 +1,5 @@
 {
-  "files": ["input/custom.ts"],
+  "files": ["input/source.ts"],
   "serverlessConfigPath": "input/serverless.yml",
   "outputDirectory": "output",
   "annotations": {
