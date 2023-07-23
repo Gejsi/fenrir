@@ -48,6 +48,10 @@ const updateFunctionBody: ts.Visitor = (node) => {
                 buildReturnExpression(innerNode)
               )
             )
+          else if (ts.isThrowStatement(innerNode))
+            s.push(
+              ts.factory.createReturnStatement(buildThrowExpression(innerNode))
+            )
           else s.push(innerNode as ts.Statement)
         })
 
@@ -57,6 +61,11 @@ const updateFunctionBody: ts.Visitor = (node) => {
           outerNode,
           buildReturnExpression(outerNode)
         )
+      } else if (ts.isThrowStatement(outerNode)) {
+        const throwExpression = buildThrowExpression(outerNode)
+
+        if (throwExpression)
+          return ts.factory.createReturnStatement(throwExpression)
       }
 
       return outerNode
@@ -180,24 +189,7 @@ const buildJsonStringifyExpression = (
 ): ts.Expression => {
   // handle guard clauses
   if (!expression) {
-    return ts.factory.createCallExpression(
-      ts.factory.createPropertyAccessExpression(
-        ts.factory.createIdentifier('JSON'),
-        ts.factory.createIdentifier('stringify')
-      ),
-      undefined,
-      [
-        ts.factory.createObjectLiteralExpression(
-          [
-            ts.factory.createPropertyAssignment(
-              ts.factory.createIdentifier('error'),
-              ts.factory.createStringLiteral('Invalid request.')
-            ),
-          ],
-          true
-        ),
-      ]
-    )
+    return buildErrorJsonStringifyExpression('Invalid request.')
   }
 
   return ts.factory.createCallExpression(
@@ -207,6 +199,32 @@ const buildJsonStringifyExpression = (
     ),
     undefined,
     [expression]
+  )
+}
+
+/**
+ * Makes an expression like: `JSON.stringify({ error: 'foo' })`
+ */
+const buildErrorJsonStringifyExpression = (
+  errorMessage: string
+): ts.Expression => {
+  return ts.factory.createCallExpression(
+    ts.factory.createPropertyAccessExpression(
+      ts.factory.createIdentifier('JSON'),
+      ts.factory.createIdentifier('stringify')
+    ),
+    undefined,
+    [
+      ts.factory.createObjectLiteralExpression(
+        [
+          ts.factory.createPropertyAssignment(
+            ts.factory.createIdentifier('error'),
+            ts.factory.createStringLiteral(errorMessage)
+          ),
+        ],
+        true
+      ),
+    ]
   )
 }
 
@@ -227,12 +245,46 @@ const buildReturnExpression = (
 ): ts.ObjectLiteralExpression => {
   const statusCode = ts.factory.createPropertyAssignment(
     'statusCode',
-    ts.factory.createNumericLiteral(node.expression ? 200 : 400)
+    ts.factory.createNumericLiteral(200)
   )
 
   const body = ts.factory.createPropertyAssignment(
     'body',
     buildJsonStringifyExpression(node.expression)
+  )
+
+  return ts.factory.createObjectLiteralExpression([statusCode, body], true)
+}
+
+/**
+ * Transforms throw statements into object-literals:
+ * ```
+ * // from
+ * throw new Error('Foo')
+ * // into
+ * return {
+ *  statusCode: 400,
+ *  body: JSON.stringify({ error: 'Foo'})
+ * }
+ * ```
+ */
+const buildThrowExpression = (
+  node: ts.ThrowStatement
+): ts.ObjectLiteralExpression | undefined => {
+  if (!ts.isNewExpression(node.expression)) return
+
+  const errorExpression = node.expression.arguments?.[0]
+
+  if (!errorExpression) return
+
+  const statusCode = ts.factory.createPropertyAssignment(
+    'statusCode',
+    ts.factory.createNumericLiteral(400)
+  )
+
+  const body = ts.factory.createPropertyAssignment(
+    'body',
+    buildErrorJsonStringifyExpression(errorExpression.getText())
   )
 
   return ts.factory.createObjectLiteralExpression([statusCode, body], true)
