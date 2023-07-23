@@ -18,7 +18,7 @@ export function scheduledTransfomer(
     return reportErrorAt(
       `'$${annotation.name}' must receive the 'rate' parameter`,
       nodeName,
-      node
+      context
     )
   }
 

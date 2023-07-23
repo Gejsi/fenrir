@@ -17,7 +17,7 @@ export function trackMetricsTransformer(
     return reportErrorAt(
       `'$${annotation.name}' must be applied to an async function`,
       nodeName,
-      node
+      context
     )
 
   if (
@@ -28,7 +28,7 @@ export function trackMetricsTransformer(
     return reportErrorAt(
       `'$${annotation.name}' must receive 'namespace' and 'metricName' as parameters`,
       nodeName,
-      node
+      context
     )
   }
 
@@ -39,7 +39,7 @@ export function trackMetricsTransformer(
     return reportErrorAt(
       `'$${annotation.name}' must receive strings as values for 'namespace' and 'metricName' parameters`,
       nodeName,
-      node
+      context
     )
   }
 
@@ -57,9 +57,11 @@ export function trackMetricsTransformer(
       errorText += `'${localName}' | `
     }
 
-    errorText = errorText.substring(0, errorText.length - 3) // - 3 removes the last " | " chars
+    if (errorText.endsWith(' | '))
+      errorText = errorText.substring(0, errorText.length - ' | '.length)
+    else errorText = errorText.substring(0, errorText.length - ' like\n'.length)
 
-    return reportErrorAt(errorText, nodeName, node)
+    return reportErrorAt(errorText, nodeName, context)
   }
 
   const importSpecifier = 'aws-sdk'

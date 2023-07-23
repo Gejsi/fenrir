@@ -18,7 +18,7 @@ export function httpTransfomer(
     return reportErrorAt(
       `'$${annotation?.name}' must receive both 'method' and 'path' as parameters`,
       nodeName,
-      node
+      context
     )
   }
 

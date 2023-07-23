@@ -8,31 +8,31 @@ export const reportSyntaxError = (
   markerCount: number,
   errorMessage: string,
   nodeName: string,
-  node: ts.Node
+  context: ts.TransformationContext
 ): never => {
   let errorText = text + '\n'
   errorText += ' '.repeat(emptyCount) + '^'.repeat(markerCount) + '\n'
   errorText += ' '.repeat(emptyCount) + errorMessage + '\n\n'
   errorText += `You have provided an ${errorMessage.toLowerCase()}`
 
-  return reportErrorAt(errorText, nodeName, node)
+  return reportErrorAt(errorText, nodeName, context)
 }
 
 export const reportErrorAt = (
   errorMessage: string,
   nodeName: string,
-  node: ts.Node
+  context: ts.TransformationContext
 ): never => {
-  const { dir, base } = parseFileName(node.getSourceFile().fileName)
+  const { dir, base } = parseFileName(context.sourceFile.fileName)
   const filePath = dir + '/' + base
-  const { line } = node
-    .getSourceFile()
-    .getLineAndCharacterOfPosition(node.getStart())
+
+  const { line } = context.sourceFile.getLineAndCharacterOfPosition(
+    context.nodeStartingPosition
+  )
 
   let errorText = errorMessage + '\n'
-  errorText += `in function '${nodeName}' defined here:\n--> ${filePath}:${
-    line + 1
-  }`
+  errorText += `in function '${nodeName}' defined here:\n`
+  errorText += `--> ${filePath}:${line + 1}`
 
   console.error(errorText)
   process.exit(1)
@@ -40,7 +40,10 @@ export const reportErrorAt = (
 
 export const reportDiagnostics = (diagnostics: ts.DiagnosticWithLocation[]) => {
   diagnostics.forEach((diagnostic) => {
-    const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')
+    const message = ts.flattenDiagnosticMessageText(
+      diagnostic.messageText,
+      '\n'
+    )
 
     if (diagnostic.file) {
       const { line, character } = ts.getLineAndCharacterOfPosition(

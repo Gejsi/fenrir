@@ -4,7 +4,7 @@ import { init } from './init'
 import transpile from 'fenrir-core'
 
 const argv = cli({
-  name: 'fen',
+  name: 'fenrir',
   version,
   help: {
     description: 'Fenrir simplifies the development of serverless functions.',

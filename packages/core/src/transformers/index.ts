@@ -6,16 +6,22 @@ import { trackMetricsTransformer } from './track-metrics'
 import { fixedTransfomer } from './fixed'
 import { httpTransfomer } from './http'
 import { scheduledTransfomer } from './scheduled'
-import type { ServerlessConfigFunctions } from '../transpile'
+import type {
+  CustomAnnotations,
+  ServerlessConfigFunctions,
+  CustomTransformer,
+} from '../transpile'
 
 /** This transformer maps all sub-transformers */
 export function superTransformer(
   checker: ts.TypeChecker,
   functionDetails: ServerlessConfigFunctions,
-  outputDirectory: string
+  outputDirectory: string,
+  customAnnotations: CustomAnnotations
 ): ts.TransformerFactory<ts.SourceFile> {
   return (context) => {
     context.slsFunctionDetails = functionDetails
+    context.customAnnotations = customAnnotations
     context.typeChecker = checker
     context.outputDirectory = outputDirectory
 
@@ -39,7 +45,7 @@ export function superTransformer(
 
         const res = mainTransfomer(node, context)
 
-        // if the function transformation was successful, return the new node
+        // if the transformation was successful, return the new node
         if (res) return res
 
         return node
@@ -61,6 +67,7 @@ function mainTransfomer(
   context.locals = (node as any).locals
   // Define the source file present in the AST
   context.sourceFile = node.getSourceFile()
+  context.nodeStartingPosition = node.getStart()
 
   const symbol = node.name && context.typeChecker.getSymbolAtLocation(node.name)
   if (!symbol) return
@@ -73,10 +80,10 @@ function mainTransfomer(
   let res: ts.SourceFile | ts.FunctionDeclaration | undefined = node
 
   for (const comment of comments) {
-    const parsedAnnotation = parseAnnotation(comment, symbol.getName(), node)
+    const parsedAnnotation = parseAnnotation(comment, symbol.getName(), context)
     if (!parsedAnnotation) continue
 
-    const pipedNode =
+    const pipedNode: ts.FunctionDeclaration | undefined =
       res && ts.isSourceFile(res)
         ? findFunctionInFile(res, symbol.getName())
         : res
@@ -89,6 +96,16 @@ function mainTransfomer(
       httpTransfomer(pipedNode, context, parsedAnnotation)
     } else if (annotationNameEquals(parsedAnnotation, 'Scheduled')) {
       scheduledTransfomer(pipedNode, context, parsedAnnotation)
+    } else if (parsedAnnotation.name in context.customAnnotations) {
+      const customTransformer = context.customAnnotations[parsedAnnotation.name]
+
+      // `result` is used because transformers can also be `void`
+      const result: ReturnType<CustomTransformer> = customTransformer?.(
+        pipedNode,
+        context,
+        parsedAnnotation as any
+      )
+      if (result) res = result
     }
   }
 

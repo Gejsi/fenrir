@@ -21,7 +21,7 @@ type Match =
 export function parseAnnotation(
   text: string,
   nodeName: string | undefined,
-  node: ts.FunctionDeclaration
+  context: ts.TransformationContext
 ): Annotation | undefined {
   const match = text.match(noteRegex) as Match
 
@@ -30,7 +30,10 @@ export function parseAnnotation(
   const { name, args } = match.groups
 
   // catch name syntax errors
-  if (!name || !(name in ANNOTATIONS)) {
+  if (
+    !name ||
+    (!(name in ANNOTATIONS) && !(name in context.customAnnotations))
+  ) {
     const [startPos, endPos] = match.indices.groups.name
 
     nodeName &&
@@ -40,7 +43,7 @@ export function parseAnnotation(
         endPos - startPos,
         'Unknown annotation name',
         nodeName,
-        node
+        context
       )
   }
 
@@ -58,7 +61,7 @@ export function parseAnnotation(
         text.length - endPos,
         'Invalid bracket',
         nodeName,
-        node
+        context
       )
   }
 
@@ -77,7 +80,7 @@ export function parseAnnotation(
         text.length - endPos,
         'Invalid syntax for annotation parameters',
         nodeName,
-        node
+        context
       )
   }
 

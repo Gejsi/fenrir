@@ -4,23 +4,21 @@ service: hati
 frameworkVersion: "3"
 provider:
   name: aws
-  runtime: nodejs14.x
+  runtime: nodejs18.x
   region: eu-central-1
-  environment:
-    MY_SECRET: ${file(./config.${opt:stage, 'dev'}.json):CREDS}
   iamRoleStatements:
     - Effect: Allow
       Action:
         - lambda:InvokeFunction
         - lambda:InvokeAsync
       Resource: "*"
-functions:
-  hi:
-    handler: hello.hi
-  hello:
-    handler: hello.greet
-  count:
-    handler: vanilla.count
 plugins:
   - serverless-offline
   - serverless-esbuild
+functions:
+  read:
+    handler: output/read.read
+  scanMessage:
+    handler: output/scan-message.scanMessage
+  scanMetadata:
+    handler: output/scan-metadata.scanMetadata

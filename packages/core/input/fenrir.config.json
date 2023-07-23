@@ -1,5 +1,8 @@
 {
-  "files": ["input/vanilla.js"],
+  "files": ["input/source.ts"],
   "serverlessConfigPath": "input/serverless.yml",
-  "outputDirectory": "output"
+  "outputDirectory": "output",
+  "annotations": {
+    "S3Bucket": "input-annotations/s3-bucket.ts"
+  }
 }

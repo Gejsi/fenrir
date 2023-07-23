@@ -1,5 +1,10 @@
 {
   "name": "fenrir-core",
+  "description": "A transpiler that simplifies the development of serverless functions.",
+  "keywords": [
+    "serverless",
+    "transpiler"
+  ],
   "scripts": {
     "build": "tsup src/index.ts --dts",
     "dev": "tsx watch input/test.ts",

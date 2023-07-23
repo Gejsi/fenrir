@@ -19,6 +19,8 @@ functions:
     handler: hello.hi
   hello:
     handler: hello.greet
+  processOrder:
+    handler: output/source.processOrder
 plugins:
   - serverless-offline
   - serverless-esbuild
