@@ -3,7 +3,6 @@ import { Annotation } from '../annotations'
 import { isFunctionAsync, isNodeReal } from '../node'
 import { reportErrorAt } from '../report'
 
-// TODO: support named and default imports
 export function trackMetricsTransformer(
   node: ts.FunctionDeclaration | undefined,
   context: ts.TransformationContext,
@@ -102,32 +101,17 @@ function visitFunction(
   context: ts.TransformationContext,
   annotation: Annotation<'TrackMetrics'>
 ): ts.FunctionDeclaration {
-  const varStatement = ts.factory.createVariableStatement(
-    undefined,
-    ts.factory.createVariableDeclarationList(
-      [
-        ts.factory.createVariableDeclaration(
-          '_cloudwatch',
-          undefined,
-          undefined,
-          ts.factory.createNewExpression(
-            ts.factory.createIdentifier('CloudWatch'),
-            undefined,
-            []
-          )
-        ),
-      ],
-      ts.NodeFlags.Const
-    )
-  )
-
   const awaitedStatement = ts.factory.createExpressionStatement(
     ts.factory.createAwaitExpression(
       ts.factory.createCallExpression(
         ts.factory.createPropertyAccessExpression(
           ts.factory.createCallExpression(
             ts.factory.createPropertyAccessExpression(
-              ts.factory.createIdentifier('_cloudwatch'),
+              ts.factory.createNewExpression(
+                ts.factory.createIdentifier('CloudWatch'),
+                undefined,
+                []
+              ),
               'putMetricData'
             ),
             undefined,
@@ -200,7 +184,7 @@ function visitFunction(
             childNode.declarationList.declarations[0]?.name.getText() ===
               (annotation.args?.metricValue as ts.Identifier)?.escapedText
           ) {
-            return [childNode, varStatement, awaitedStatement]
+            return [childNode, awaitedStatement]
           }
 
           return childNode
@@ -224,7 +208,6 @@ function visitFunction(
     isAware
       ? awareBlock
       : ts.factory.updateBlock(node.body!, [
-          varStatement,
           awaitedStatement,
           ...(node.body?.statements ?? []),
         ]) // block

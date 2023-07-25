@@ -1,10 +1,11 @@
-/**
- * $Fixed
- */
-export async function processOrder() {
-  if (true) {
-    throw new Error('Something went wrong')
-  }
+import { query } from '../local'
 
-  return [1, 2]
+/**
+ * $TrackMetrics(namespace: 'shop', metricName: 'sells', metricValue: size)
+ */
+export async function processOrder(id) {
+  const order = await query(id)
+  const size = order.size
+  // ...more logic...
+  return size
 }
