@@ -22,6 +22,17 @@ export function httpTransfomer(
     )
   }
 
+  if (
+    typeof annotationArgs.method !== 'string' ||
+    typeof annotationArgs.path !== 'string'
+  ) {
+    return reportErrorAt(
+      `'$${annotation.name}' must receive strings as values for 'method' and 'path' parameters`,
+      nodeName,
+      context
+    )
+  }
+
   const details = context.slsFunctionDetails.get(nodeName)
   const handler =
     context.outputDirectory +

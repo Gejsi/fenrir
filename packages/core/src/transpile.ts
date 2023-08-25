@@ -12,7 +12,7 @@ export type Locals = Map<string, ts.Symbol>
 
 export type CustomTransformer<
   TName extends string = '',
-  TArgs extends {} = {}
+  TArgs extends { [key: string]: unknown } = {}
 > = (
   node: ts.FunctionDeclaration | undefined,
   context: ts.TransformationContext,
@@ -85,7 +85,7 @@ export async function transpile(configPath: string) {
   if (!serverlessConfigPath) {
     if (Array.isArray(files)) {
       reportMissingServerlessConfig(
-        'Since you are providing a list of files, a `serverless.yml` must \nbe provided to the transpiler to generate the needed metadata.'
+        'Since you are providing a list of files, a `serverless.yml` must\nbe provided to the transpiler to generate the needed metadata.'
       )
       return
     }

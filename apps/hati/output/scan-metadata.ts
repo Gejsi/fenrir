@@ -14,7 +14,7 @@ export async function scanMetadata(event) {
     const links: Links = event;
     if (!links || !links.length)
         return {
-            statusCode: 400,
+            statusCode: 200,
             body: JSON.stringify({
                 error: "Invalid request."
             })
