@@ -1,7 +1,7 @@
 import { cli } from 'cleye'
 import { version } from '../package.json'
 import { init } from './init'
-import transpile from 'fenrir-core'
+import { transpile } from 'fenrir-core'
 
 const argv = cli({
   name: 'fenrir',

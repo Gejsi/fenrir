@@ -10,7 +10,7 @@ export const isFunctionAsync = (node: ts.FunctionDeclaration): boolean => {
   return (modifierFlags & ts.ModifierFlags.Async) !== 0
 }
 
-/** Checks if the node has a real position in the AST */
+/** Checks if the node is really present in the AST */
 export const isNodeReal = (node: ts.Node | undefined): boolean => {
   return node ? node.pos !== -1 : false
 }

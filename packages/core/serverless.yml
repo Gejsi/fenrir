@@ -21,11 +21,6 @@ functions:
     handler: hello.greet
   foo:
     handler: output/source.foo
-    events:
-      - schedule:
-          rate: rate(2 hours)
-      - schedule:
-          rate: cron(0 12 * * ? *)
 plugins:
   - serverless-offline
   - serverless-esbuild

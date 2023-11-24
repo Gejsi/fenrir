@@ -149,7 +149,7 @@ function parseExpression(
 
     value = tempValue
   } else {
-    // If the initializer has an unsupported type, just store its expression
+    // If the initializer has an unsupported type, just store it as an expression
     value = expr
   }
 

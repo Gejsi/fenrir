@@ -1,7 +1,7 @@
 # Hati
 
-Example app built to show Fenrir's features:
-it shows an email message analysis pipeline.
+Example app built to show Fenrir's features which
+shows an email message analysis pipeline.
 
 To run the monolithic code:
 

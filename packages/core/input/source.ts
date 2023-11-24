@@ -1,6 +1,4 @@
-import { query } from '../local'
-
 /**
- * $HttpApi
+ * $Fixed
  */
 export function foo() {}
