@@ -189,7 +189,9 @@ const buildJsonStringifyExpression = (
 ): ts.Expression => {
   // handle guard clauses
   if (!expression) {
-    return buildErrorJsonStringifyExpression('Invalid request.')
+    return buildErrorJsonStringifyExpression(
+      ts.factory.createStringLiteral('Invalid request.')
+    )
   }
 
   return ts.factory.createCallExpression(
@@ -206,7 +208,7 @@ const buildJsonStringifyExpression = (
  * Makes an expression like: `JSON.stringify({ error: 'foo' })`
  */
 const buildErrorJsonStringifyExpression = (
-  errorMessage: string
+  error: ts.Expression
 ): ts.Expression => {
   return ts.factory.createCallExpression(
     ts.factory.createPropertyAccessExpression(
@@ -219,7 +221,7 @@ const buildErrorJsonStringifyExpression = (
         [
           ts.factory.createPropertyAssignment(
             ts.factory.createIdentifier('error'),
-            ts.factory.createStringLiteral(errorMessage)
+            error
           ),
         ],
         true
@@ -284,7 +286,7 @@ const buildThrowExpression = (
 
   const body = ts.factory.createPropertyAssignment(
     'body',
-    buildErrorJsonStringifyExpression(errorExpression.getText())
+    buildErrorJsonStringifyExpression(errorExpression)
   )
 
   return ts.factory.createObjectLiteralExpression([statusCode, body], true)

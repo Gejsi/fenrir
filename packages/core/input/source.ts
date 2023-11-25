@@ -1,4 +1,8 @@
 /**
  * $Fixed
  */
-export function foo() {}
+export function foo() {
+  if (false) {
+    return
+  }
+}
