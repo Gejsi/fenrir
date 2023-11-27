@@ -1,5 +1,6 @@
 {
   "name": "hati",
+  "private": true,
   "scripts": {
     "format": "prettier --write \"output/*.{ts,js}\"",
     "lint": "eslint \"output/*.{ts,js}*\"",
@@ -17,7 +18,7 @@
     "@types/sentiment": "^5.0.1",
     "esbuild": "^0.17.19",
     "eslint-config-custom": "workspace:*",
-    "fenrir": "workspace:*",
+    "fenrir-cli": "workspace:*",
     "serverless": "^3.26.0",
     "serverless-esbuild": "^1.44.0",
     "serverless-offline": "^11.6.0",

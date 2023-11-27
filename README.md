@@ -62,15 +62,17 @@ generateReport:
 
 # Usage
 
+> ⚠️ **Fenrir hasn't been published to NPM yet**
+
 Install the CLI:
 
 ```console
-npm install -g fenrir
+npm install -g fenrir-cli
 ```
 
-Make sure both `fenrir-core` and `serverless` packages are installed.
+Make sure both `fenrir-base` and `serverless` packages are installed.
 
-The CLI offers a `init` command to get things started with some prompts (it creates a `fenrir.config.json`):
+The CLI offers a `init` command to get things started (it creates a `fenrir.config.json`):
 
 ```console
 fenrir init
@@ -79,7 +81,7 @@ fenrir init
 However, most of the time the CLI is used with the `-g` flag which indicates in which directory the `fenrir.config.json` file is located:
 
 ```console
-fenrir -g input
+fenrir -g functions
 ```
 
 # Annotations
@@ -219,10 +221,10 @@ implementation, the configuration file (i.e., `fernrir.config.json`) must be upd
 }
 ```
 
-To write a transformer, you can import useful methods from `fenrir-core`.
+To write a transformer, you can import useful methods from `fenrir-base`.
 
 ```ts
-import type { CustomTransformer } from 'fenrir-core'
+import type { CustomTransformer } from 'fenrir-base'
 
 type IotTransfomer = CustomTransformer<'IoT', { sql: string }>
 

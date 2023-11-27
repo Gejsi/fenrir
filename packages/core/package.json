@@ -1,5 +1,5 @@
 {
-  "name": "fenrir-core",
+  "name": "fenrir-base",
   "description": "A transpiler that simplifies the development of serverless functions.",
   "keywords": [
     "serverless",
